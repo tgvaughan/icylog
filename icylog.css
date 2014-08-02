@@ -1,0 +1,46 @@
+body {
+/*    background-color: black;*/
+}
+
+#leftPanel {
+    position: fixed;
+    margin: 5px;
+    padding: 5px;
+    top: 0px;
+    left: 0px;
+    width: 230px;
+    bottom: 0px;
+}
+
+/*#options {
+    font: 14px sans-serif;
+}*/
+
+#options ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+#options li {
+    text-align: center;
+    list-style: none;
+    margin-bottom: 0px;
+}
+
+#variables {
+}
+
+#mainPanel {
+    position: fixed;
+    top: 0px;
+    left: 250px;
+    right: 0px;
+    bottom: 0px;
+    margin: 5px;
+    padding: 0px;
+}
+
+#fileInput {
+    position: absolute;
+    left: -9999px;
+}
