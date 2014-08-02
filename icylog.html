@@ -10,7 +10,9 @@
           content="Browser-based MCMC log file viewer." data-app/>
 
     <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="http://code.jquery.com/ui/1.11.0/themes/start/jquery-ui.css"/>
+    <link rel="stylesheet"
+          type="text/css"
+          href="http://code.jquery.com/ui/1.11.0/themes/flick/jquery-ui.css"/>
     <script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
 
     <script src="icylog.js"></script>
@@ -19,9 +21,13 @@
 
   <body>
 
-    <div id="leftPanel" class="ui-widget ui-widget-content ui-corner-all">
+    <!-- Left panel -->
 
-      <div id="options">
+    <div id="leftPanel">
+
+      <!-- Options buttons -->
+
+      <div id="options" class="ui-widget ui-widget-content ui-corner-all">
         <ul>
           <li><button id="load">Load...</button> <button id="reload">Reload</button></li>
           <li><input type="checkbox" id="periodicPolling">
@@ -38,24 +44,29 @@
           </li>
         </ul>
       </div>
-      <div id="variables"></div>
+
+      <!-- Variable list -->
+      <div id="variables" class="ui-widget ui-widget-content ui-corner-all ui-helper-hidden" ></div>
+
     </div>
 
-    <div id="mainPanel">
+
+    <!-- Main panel containing tabs -->
+
+    <div id="mainPanel" class="ui-helper-hidden">
       <ul>
         <li><a href="#traceTab">Traces</a></li>
         <li><a href="#statsTab">Statistics</a></li>
         <li><a href="#kdeTab">Density Estimates</a></li>
       </ul>
-      <div id="traceTab">
-      </div>
 
-      <div id="statsTab">
-      </div>
-      
-      <div id="kdeTab">
-      </div>
+      <div id="traceTab"></div>
+      <div id="statsTab"></div>
+      <div id="kdeTab"></div>
     </div>
+
+    <!-- Drop target panel -->
+    <div id="dropPanel"></div>
 
     <!-- File input element -->
     <input id="fileInput" type="file"/>

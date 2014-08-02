@@ -1,20 +1,19 @@
 body {
-/*    background-color: black;*/
+    /*background-color: black;*/
 }
 
 #leftPanel {
     position: fixed;
     margin: 5px;
-    padding: 5px;
     top: 0px;
     left: 0px;
-    width: 230px;
+    width: 240px;
     bottom: 0px;
 }
 
-/*#options {
-    font: 14px sans-serif;
-}*/
+#options {
+    padding: 5px;
+}
 
 #options ul {
     margin: 0px;
@@ -28,6 +27,7 @@ body {
 }
 
 #variables {
+    padding: 5px;
 }
 
 #mainPanel {
@@ -38,6 +38,19 @@ body {
     bottom: 0px;
     margin: 5px;
     padding: 0px;
+}
+
+#dropPanel {
+    position: fixed;
+    top: 0px;
+    left: 250px;
+    right: 0px;
+    bottom: 0px;
+    margin: 20px;
+    border: dashed gray 5px;
+
+    text-align: center;
+    z-index: -1;
 }
 
 #fileInput {
