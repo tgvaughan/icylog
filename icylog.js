@@ -178,6 +178,15 @@ function updateVariableCheckboxes() {
     }
 }
 
+function updateMainPanel() {
+    
+}
+
+// Update trace panel
+function updateTrace() {
+    
+}
+
 // Redraw everything following file (re)load / window size change
 function update() {
     if (logFile === undefined) {
@@ -260,10 +269,12 @@ var VariableLog = Object.create({}, {
     name: {value: "", writable: true},
     samples: {value: [], writable: true},
     sampleIndices: {value: [], writable: true},
-    ESS: {value: [], writable: true},
+    ESS: {value: undefined, writable: true},
     mean: {value: undefined, writable: true},
     variance: {value: undefined, writable: true},
     mode: {value: undefined, writable: true},
+    burninFrac: {value: 0.1, writable: true},
+    burninEnd: {value: undefined, writable: true},
 
     init: {value: function(name) {
         this.name = name;
@@ -275,10 +286,93 @@ var VariableLog = Object.create({}, {
     }},
 
     addSample: {value: function(sample, sampleIdx) {
-        // Update statistics
-
         // Include sample in sample list
-        this.samples.push(sample);
-        this.sampleIndices.push(sampleIdx);
+        this.samples.push(parseFloat(sample));
+        this.sampleIndices.push(parseInt(sampleIdx));
+
+        this.sampleStart = Math.floor(this.burninFrac*this.samples.length);
+
+        // Invalidate previously calculated stats
+        this.mean = undefined;
+        this.mode = undefined;
+        this.variance = undefined;
+        this.ESS = undefined;
+    }},
+
+    getESS: {value: function() {
+        if (this.ESS == undefined) {
+
+            var n = this.samples.length - this.sampleStart;
+
+            var real = new Array(n);
+            var imag = new Array(n);
+            for (var i=0; i<n; i++) {
+                real[i] = (this.samples[i+this.sampleStart] - this.getMean())/Math.sqrt(this.getVariance());
+                imag[i] = 0.0;
+            }
+
+            transform(real, imag);
+
+            for (i=0; i<n; i++) {
+                real[i] = real[i]*real[i] + imag[i]*imag[i];
+                imag[i] = 0.0;
+            }
+
+            inverseTransform(real, imag);
+
+            // Sum ACF until autocorrelation dips below 0.
+            // (Seems to yield decent agreement with Tracer.)
+            var sumRho = 0.0;
+            for (i=0; i<n; i++) {
+                real[i] /= n*n;
+
+                if (i>1 && (real[i-1] + real[i]) < 0)
+                    break;
+                else
+                    sumRho += real[i];
+            }
+
+            // Magic formula for calculating ESS.
+            this.ESS = n/(1 + 2*sumRho);
+        }
+
+        return this.ESS;
+    }},
+
+    getMean: {value: function() {
+        if (this.mean == undefined) {
+            var n = this.samples.length - this.sampleStart;
+            
+            this.mean = 0.0;
+            for (var i=0; i<n; i++) {
+                this.mean += this.samples[i+this.sampleStart];
+            }
+            this.mean /= n;
+        }
+
+        return this.mean;
+    }},
+
+    getVariance: {value: function() {
+        if (this.variance == undefined) {
+            var n = this.samples.length - this.sampleStart;
+            
+            this.variance = 0.0;
+            for (var i=0; i<n; i++) {
+                this.variance += this.samples[i+this.sampleStart]*this.samples[i+this.sampleStart];
+            }
+            this.variance /= n;
+            this.variance -= this.getMean()*this.getMean();
+        }
+
+        return this.variance;
+    }},
+
+    getMode: {value: function() {
+        if (this.mode == undefined) {
+        }
+
+        return this.mode;
     }}
+    
 });
