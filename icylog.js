@@ -1,14 +1,57 @@
+/**
+ * @licstart The following is the entire license notice for the
+ * JavaScript code in this page.
+ *
+ * Copyright (C) 2014  Tim Vaughan
+ *
+ *
+ * The JavaScript code in this page is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend The above is the entire license notice for the JavaScript
+ * code in this page.
+ */
+
+// Global variables
 var logFile = undefined;
+var logFileData = undefined;
+var log = undefined;
 
 // Page initialisation code:
 $(document).ready(function() {
 
     $(window).on("resize", update);
 
+    // Set up drag and drop event listeners:
+    $(window).on("dragover", function(event) {
+        event.preventDefault();
+        return false;
+    });
+    $(window).on("dragend", function(event) {
+        event.preventDefault();
+        return false;
+    });
+    $(window).on("drop", function (event) {
+        event.preventDefault();
+        logFile = event.originalEvent.dataTransfer.files[0];
+        loadFile();
+    });
+
     // Set up tabs on main panel
     $("#mainPanel").tabs();
 
-    // Set up buttons on left panel
+    // Set up options buttons on left panel
     $("#load").button();
     $("#reload").button({disabled: true}).position({
         my: "left",
@@ -20,6 +63,21 @@ $(document).ready(function() {
         my: "left",
         at: "right+10",
         of: $("#periodicPolling").button("widget")});
+
+    // Set up help menu on left panel
+    $("#helpMenuButton").button();
+    $("#helpMenu").menu({select: function(event, ui) {
+        switch(ui.item[0].id) {
+        case "helpAbout":
+            $("#about").dialog("open");
+        }
+    }}).hide();
+    $("#help").mouseover(function() {
+        $("#helpMenu").menu().show();
+    });
+    $("#help").mouseout(function() {
+        $("#helpMenu").menu().hide();
+    });
 
     // Set up event handlers
     $("#load").click(function() {
@@ -35,11 +93,41 @@ $(document).ready(function() {
         loadFile();
     });
 
+    // Dialog boxes
+    $("#about").dialog({
+        autoOpen: false,
+        modal: true,
+        width: 450,
+        closeText: "ok",
+        buttons: {
+            Ok: function() {
+                $(this).dialog("close");
+            }}
+    });
+
     update();
 });
 
 // Load/reload log file
 function loadFile() {
+    var reader = new FileReader();
+    reader.onload = fileLoaded;
+    reader.readAsText(logFile);
+
+    function fileLoaded(evt) {
+        logFileData = evt.target.result;
+        reloadLogData();
+    }
+}
+
+// Read log file data into Log object.
+function reloadLogData() {
+    if (logFileData === undefined)
+        return;
+
+    log = Object.create(Log, {}).init(logFileData, "\t");
+
+    update();
 }
 
 // Ensure SVG is positioned correctly in drop panel.
@@ -62,23 +150,135 @@ function updateDropPanel() {
     dropPanel.css("paddingBottom", pad);
 }
 
+// Update variable checkboxes:
+function updateVariableCheckboxes() {
+    if (log === undefined) {
+        $("#variables").addClass("ui-helper-hidden");
+        return;
+    }
+
+/*    $("#variables > input").each(function() {
+        $(this).button("destroy");
+    });*/
+
+    $("#variables").html("");
+    $("#variables").removeClass("ui-helper-hidden");
+
+    for (var i=0; i<log.variableNames.length; i++) {
+        var thisName = log.variableNames[i];
+        var checkbox = $("<input/>")
+                .attr("type", "checkbox")
+                .attr("id", "var_" + thisName);
+        var label = $("<label/>")
+                .attr("for", "var_" + thisName)
+                .html(thisName);
+
+        $("#variables").append(checkbox).append(label);
+        checkbox.button();
+    }
+}
 
 // Redraw everything following file (re)load / window size change
 function update() {
-    if (logFile === undefined)
+    if (logFile === undefined) {
         updateDropPanel();
+        $("#mainPanel").addClass("ui-helper-hidden");
+    } else {
+        $("#mainPanel").removeClass("ui-helper-hidden");
+    }
+
+    updateVariableCheckboxes();
 }
 
 /****************************
           PROTOTYPES
  ****************************/
 
+var Log = Object.create({}, {
+    variableLogs: {value: [], writable: true},
+    variableNames: {value: [], writable: true},
+
+    // Initialiser
+    init: {value: function(logFileString, colSep) {
+        this.variableLogs = [];
+        this.variableNames = [];
+
+        var lines = logFileString.split('\n');
+
+        var headerRead = false;
+        var sampleIdxCol = 0;
+
+        for (var i=0; i<lines.length; i++) {
+            var thisLine = lines[i].trim();
+
+            // Skip newlines and comments
+            if (thisLine.length == 0 || thisLine[0] == "#")
+                continue;
+
+            var fields = thisLine.split(colSep);
+
+            if (!headerRead) {
+
+                // Read header
+
+                for (var fidx=0; fidx<fields.length; fidx++) {
+                    if (fields[fidx].toLowerCase() === "sample") {
+                        sampleIdxCol = fidx;
+                        continue;
+                    }
+
+                    var varLog = Object.create(VariableLog, {}).init(fields[fidx]);
+                    this.variableLogs.push(varLog);
+                    this.variableNames.push(fields[fidx]);
+                }
+
+                headerRead = true;
+
+            } else {
+
+                // Read sample record
+
+                var vidx = 0;
+                for (var fidx=0; fidx<fields.length; fidx++) {
+                    if (fidx==sampleIdxCol)
+                        continue;
+
+                    this.variableLogs[vidx].addSample(fields[fidx], fields[sampleIdxCol]);
+                    vidx += 1;
+                }
+
+            }
+
+        }
+
+        return this;
+    }}
+});
+
 // Prototype object representing a log of a single variable
 var VariableLog = Object.create({}, {
     name: {value: "", writable: true},
-    values: {value: [], writable: true},
+    samples: {value: [], writable: true},
+    sampleIndices: {value: [], writable: true},
     ESS: {value: [], writable: true},
     mean: {value: undefined, writable: true},
     variance: {value: undefined, writable: true},
-    mode: {value: undefined, writable: true}
+    mode: {value: undefined, writable: true},
+
+    init: {value: function(name) {
+        this.name = name;
+        this.samples = [];
+        this.sampleIndices = [];
+        this.ESS = [];
+
+        return this;
+    }},
+
+    addSample: {value: function(sample, sampleIdx) {
+        // Update statistics
+
+        // Include sample in sample list
+        this.samples.push(sample);
+        this.sampleIndices.push(sampleIdx);
+    }}
 });

@@ -17,6 +17,8 @@
 
     <script src="icylog.js"></script>
     <link rel="stylesheet" type="text/css" href="icylog.css"/>
+
+    <link rel="shortcut icon" href="icylog.ico" />
   </head>
 
   <body>
@@ -48,6 +50,15 @@
       <!-- Variable list -->
       <div id="variables" class="ui-widget ui-widget-content ui-corner-all ui-helper-hidden" ></div>
 
+      <!-- Help buttons -->
+      <div id="help" class="ui-widget ui-widget-content ui-corner-all">
+        <button id="helpMenuButton">Help</button>
+        <ul id="helpMenu">
+          <li class="ui-state-disabled">Keyboard shortcuts...</li>
+          <li id="helpAbout">About IcyLog...</li>
+        </ul>
+      </div>
+
     </div>
 
 
@@ -55,9 +66,9 @@
 
     <div id="mainPanel" class="ui-helper-hidden">
       <ul>
-        <li><a href="#traceTab">Traces</a></li>
-        <li><a href="#statsTab">Statistics</a></li>
-        <li><a href="#kdeTab">Density Estimates</a></li>
+        <li><a class="ui-state-disabled" href="#traceTab">Traces</a></li>
+        <li><a class="ui-state-disabled" href="#statsTab">Statistics</a></li>
+        <li><a class="ui-state-disabled" href="#kdeTab">Density Estimates</a></li>
       </ul>
 
       <div id="traceTab"></div>
@@ -65,11 +76,37 @@
       <div id="kdeTab"></div>
     </div>
 
+
     <!-- Drop target panel -->
     <div id="dropPanel"></div>
 
+
     <!-- File input element -->
     <input id="fileInput" type="file"/>
+
+
+    <!-- About box -->
+    <div id="about" title="About IcyLog">
+      <img src="icylog.png"/>
+      <p>This is a browser-based BEAST log file viewer. It is
+        intended for rapid visualization of  log files such as
+        those produced by <a target="new"
+        href="http://beast2.org">BEAST 2</a>.</p>
+      
+      <p>IcyLog is compatible with <i>current</i> GNU/Linux and OS X
+        versions of Mozilla Firefox and Google Chrome.</p>
+
+      <p><b>Your mileage may vary with other browser/OS
+      combinations.</b></p>
+      
+      <p>All components of IcyLog are licensed under version 3 of the
+        GNU <a target="new"
+        href="http://www.gnu.org/licenses/gpl-3.0.html">General Public
+        License</a> (GPL).  Source is available
+        on <a target="new"
+        href="https://github.com/tgvaughan/icylog">GitHub</a>. Please
+        feel free to open an issue on the project page if you find a bug.</p>
+    </div>
 
   </body>
 
