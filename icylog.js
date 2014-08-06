@@ -65,19 +65,8 @@ $(document).ready(function() {
         of: $("#periodicPolling").button("widget")});
 
     // Set up help menu on left panel
-    $("#helpMenuButton").button();
-    $("#helpMenu").menu({select: function(event, ui) {
-        switch(ui.item[0].id) {
-        case "helpAbout":
-            $("#about").dialog("open");
-        }
-    }}).hide();
-    $("#help").mouseover(function() {
-        $("#helpMenu").menu().show();
-    });
-    $("#help").mouseout(function() {
-        $("#helpMenu").menu().hide();
-    });
+    $("#helpButton").button({disabled: true});
+    $("#aboutButton").button();
 
     // Set up event handlers
     $("#load").click(function() {
@@ -103,6 +92,9 @@ $(document).ready(function() {
             Ok: function() {
                 $(this).dialog("close");
             }}
+    });
+    $("#aboutButton").click(function () {
+        $("#about").dialog("open");
     });
 
     update();
