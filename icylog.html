@@ -1,0 +1,122 @@
+<html>
+
+  <head>
+    <title>IcyLog</title>
+
+    <meta charset="utf-8"/>
+    <meta property="og:url"
+          name="og:url"
+          content="http://tgvaughan.github.io/icylog" data-app/>
+    <meta property="og:title"
+          name="og:title"
+          content="IcyLog" data-app/>
+    <meta property="description"
+          name="description"
+          content="Browser-based MCMC log file viewer." data-app/>
+
+    <!-- JQuery & JQuery UI -->
+    <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet"
+          type="text/css"
+          href="http://code.jquery.com/ui/1.11.0/themes/flick/jquery-ui.css"/>
+    <script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
+
+    <!-- Plotting library (dygraph) -->
+    <script src="dygraph-combined.js"></script>
+
+    <!-- FFT library -->
+    <script src="fft.js"></script>
+
+    <!-- Our own JS and CSS -->
+    <script src="icylog.js"></script>
+    <link rel="stylesheet" type="text/css" href="icylog.css"/>
+
+    <link rel="shortcut icon" href="icylog.ico" />
+  </head>
+
+  <body>
+
+    <!-- Left panel -->
+
+    <div id="leftPanel">
+
+      <!-- Options buttons -->
+
+      <div id="options" class="ui-widget ui-widget-content ui-corner-all">
+        <ul>
+          <li><button id="load">Load...</button> <button id="reload">Reload</button></li>
+          <li><input type="checkbox" id="periodicPolling">
+            <label for="periodicPolling">Polling</label>
+
+            <select name="pollingInterval" id="pollingInterval">
+              <option value="1">1 sec</option>
+              <option value="5">5 sec</option>
+              <option value="10">10 sec</option>
+              <option value="30">30 sec</option>
+              <option value="60">60 sec</option>
+            </select>
+
+          </li>
+        </ul>
+      </div>
+
+      <!-- Variable list -->
+      <div id="variables" class="ui-widget ui-widget-content ui-corner-all ui-helper-hidden" ></div>
+
+      <!-- Help buttons -->
+      <div id="help" class="ui-widget ui-widget-content ui-corner-all">
+        <button id="helpButton">Help</button> <button id="aboutButton">About</button>
+      </div>
+
+    </div>
+
+
+    <!-- Main panel containing tabs -->
+
+    <div id="mainPanel" class="ui-helper-hidden">
+      <ul>
+        <li><a href="#traceTab">Traces</a></li>
+        <li><a class="ui-state-disabled" href="#statsTab">Statistics</a></li>
+        <li><a class="ui-state-disabled" href="#kdeTab">Density Estimates</a></li>
+      </ul>
+
+      <div id="traceTab"></div>
+      <div id="statsTab"></div>
+      <div id="kdeTab"></div>
+    </div>
+
+
+    <!-- Drop target panel -->
+    <div id="dropPanel"></div>
+
+
+    <!-- File input element -->
+    <input id="fileInput" type="file"/>
+
+
+    <!-- About box -->
+    <div id="about" title="About IcyLog">
+      <img src="icylog.png"/>
+      <p>This is a browser-based BEAST log file viewer. It is
+        intended for rapid visualization of  log files such as
+        those produced by <a target="new"
+        href="http://beast2.org">BEAST 2</a>.</p>
+      
+      <p>IcyLog is compatible with <i>current</i> GNU/Linux and OS X
+        versions of Mozilla Firefox and Google Chrome.</p>
+
+      <p><b>Your mileage may vary with other browser/OS
+      combinations.</b></p>
+      
+      <p>All components of IcyLog are licensed under version 3 of the
+        GNU <a target="new"
+        href="http://www.gnu.org/licenses/gpl-3.0.html">General Public
+        License</a> (GPL).  Source is available
+        on <a target="new"
+        href="https://github.com/tgvaughan/icylog">GitHub</a>. Please
+        feel free to open an issue on the project page if you find a bug.</p>
+    </div>
+
+  </body>
+
+</html>

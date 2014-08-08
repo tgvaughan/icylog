@@ -1,0 +1,130 @@
+body {
+    /*background-color: black;*/
+}
+
+
+/***** Left Panel *****/
+
+#leftPanel {
+    position: fixed;
+    margin: 5px;
+    top: 0px;
+    left: 0px;
+    width: 240px;
+    bottom: 0px;
+}
+
+
+/* Options buttons */
+
+#options {
+    padding: 5px;
+}
+
+#options ul {
+    margin: 0px;
+    padding: 0px;
+}
+
+#options li {
+    text-align: center;
+    list-style: none;
+    margin-bottom: 0px;
+}
+
+
+/* Variable panel */
+
+#variables {
+    padding: 5px;
+    margin-top: 5px;
+}
+
+#variables label.ui-button {
+    width: 100%;
+}
+
+
+/* Help menu */
+
+#help {
+    padding: 5px;
+    margin-top: 5px;
+    text-align: center;
+}
+
+#helpMenu {
+    position: absolute;
+}
+
+#helpMenu.ui-menu {
+    width: 250px;
+}
+
+/*#helpMenu > li > a {
+    text-decoration: none;
+}*/
+
+#about {
+    font: 14px sans-serif;
+    text-align: left;
+}
+
+#about img {
+    float: right;
+    margin: 10px;
+}
+
+/***** Main Panel *****/
+
+#mainPanel {
+    position: fixed;
+    top: 0px;
+    left: 250px;
+    right: 0px;
+    bottom: 0px;
+    margin: 5px;
+    padding: 0px;
+}
+
+#traceTab {
+    padding: 0px;
+    margin: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+#traceTab ul {
+    padding: 0px;
+    margin: 0px;
+    display: table;
+}
+
+#traceTab ul li {
+    padding: 0px;
+    margin: 0px;
+    display: table-row;
+}
+
+/***** Drop Panel *****/
+
+#dropPanel {
+    position: fixed;
+    top: 0px;
+    left: 250px;
+    right: 0px;
+    bottom: 0px;
+    margin: 20px;
+    border: dashed gray 5px;
+
+    text-align: center;
+    z-index: -1;
+}
+
+
+/***** Miscellaneous *****/
+
+#fileInput {
+    position: absolute;
+    left: -9999px;
+}
