@@ -28,6 +28,8 @@ var logFile = undefined;
 var logFileData = undefined;
 var log = undefined;
 
+var tracePlots = [];
+
 // Page initialisation code:
 $(document).ready(function() {
 
@@ -118,7 +120,7 @@ function reloadLogData() {
         return;
 
     log = Object.create(Log, {}).init(logFileData, "\t");
-
+    updateVariableCheckboxes();
     update();
 }
 
@@ -142,6 +144,11 @@ function updateDropPanel() {
     dropPanel.css("paddingBottom", pad);
 }
 
+// Get checkbox ID string corresponding to variable name
+function sanitizeName(name) {
+    return name.replace(".","_").replace(" ","_");
+};
+
 // Update variable checkboxes:
 function updateVariableCheckboxes() {
     if (log === undefined) {
@@ -149,22 +156,43 @@ function updateVariableCheckboxes() {
         return;
     }
 
-    $("#variables").html("");
     $("#variables").removeClass("ui-helper-hidden");
+
+    $("#variables > input").each(function(index, value) {
+        var keep = false;
+        for (var i=0; i<log.variableNames.length; i++) {
+            var thisName = log.variableNames[i];
+            if ("check_" + sanitizeName(thisName) == $(this).attr("id")) {
+                keep = true;
+                break;
+            }
+        }
+
+        if (!keep) {
+            $(value).next().remove();
+            $(value).remove();
+        }
+            
+    });
 
     for (var i=0; i<log.variableNames.length; i++) {
         var thisName = log.variableNames[i];
-        var checkbox = $("<input/>")
-                .attr("type", "checkbox")
-                .attr("id", "var_" + thisName);
-        var label = $("<label/>")
-                .attr("for", "var_" + thisName)
-                .html(thisName);
+        var idstr = "check_" + sanitizeName(thisName);
 
-        $("#variables").append(checkbox).append(label);
-        checkbox.button();
+        if ($("#"+idstr).length==0) {
+            var checkbox = $("<input/>")
+                    .attr("type", "checkbox")
+                    .attr("id", idstr);
 
-        checkbox.change(updateMainPanel);
+            var label = $("<label/>")
+                    .attr("for", idstr)
+                    .html(thisName);
+
+            $("#variables").append(checkbox).append(label);
+            checkbox.button();
+
+            checkbox.change(updateMainPanel);
+        }
     }
 }
 
@@ -176,16 +204,25 @@ function updateMainPanel() {
 function updateTrace() {
 
     // Clear existing stuff
-    $("#traceTab").html("");
 
-    var ul = $("<ul/>");
-    $("#traceTab").append(ul);
+    var ul = $("#traceTab > ul");
+    if (ul.length == 0) {
+        ul = $("<ul/>");
+        $("#traceTab").append(ul);
+    }
+
+    ul.children().each(function() {
+        var variableName = $(this).attr("id").replace("check_","");
+        var index = log.variableNames.indexOf(variableName);
+        if (index<0)
+            $(this).remove();
+    });
 
     var livec = [];
     var j=0;
     for (var i=0; i<log.variableNames.length; i++) {
         var thisName = log.variableNames[i];
-        if ($("#var_" + thisName).is(":checked")) {
+        if ($("#" + "check_" + sanitizeName(thisName)).is(":checked")) {
             livec.push($("<li/>"));
             ul.append(livec[j]);
 
@@ -199,11 +236,11 @@ function updateTrace() {
     j=0;
     for (var i=0; i<log.variableNames.length; i++) {
         var thisName = log.variableNames[i];
-        if ($("#var_" + thisName).is(":checked")) {
+        if ($("#" + "check_" + sanitizeName(thisName)).is(":checked")) {
             
             livec[j].height(fullHeight/livec.length);
             livec[j].width(fullWidth);
-            var options = {labels: ["Sample", log.variableNames[1]],
+            var options = {labels: ["Sample", log.variableNames[i]],
                            xlabel: "Sample",
                            ylabel: log.variableNames[i],
                            width: fullWidth};
@@ -229,7 +266,6 @@ function update() {
         updateMainPanel();
     }
 
-    updateVariableCheckboxes();
 }
 
 /****************************
