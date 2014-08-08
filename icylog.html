@@ -14,13 +14,20 @@
           name="description"
           content="Browser-based MCMC log file viewer." data-app/>
 
+    <!-- JQuery & JQuery UI -->
     <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
     <link rel="stylesheet"
           type="text/css"
           href="http://code.jquery.com/ui/1.11.0/themes/flick/jquery-ui.css"/>
     <script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
 
+    <!-- Plotting library (dygraph) -->
+    <script src="dygraph-combined.js"></script>
+
+    <!-- FFT library -->
     <script src="fft.js"></script>
+
+    <!-- Our own JS and CSS -->
     <script src="icylog.js"></script>
     <link rel="stylesheet" type="text/css" href="icylog.css"/>
 
@@ -68,7 +75,7 @@
 
     <div id="mainPanel" class="ui-helper-hidden">
       <ul>
-        <li><a class="ui-state-disabled" href="#traceTab">Traces</a></li>
+        <li><a href="#traceTab">Traces</a></li>
         <li><a class="ui-state-disabled" href="#statsTab">Statistics</a></li>
         <li><a class="ui-state-disabled" href="#kdeTab">Density Estimates</a></li>
       </ul>

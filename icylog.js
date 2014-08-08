@@ -149,10 +149,6 @@ function updateVariableCheckboxes() {
         return;
     }
 
-/*    $("#variables > input").each(function() {
-        $(this).button("destroy");
-    });*/
-
     $("#variables").html("");
     $("#variables").removeClass("ui-helper-hidden");
 
@@ -167,16 +163,58 @@ function updateVariableCheckboxes() {
 
         $("#variables").append(checkbox).append(label);
         checkbox.button();
+
+        checkbox.change(updateMainPanel);
     }
 }
 
 function updateMainPanel() {
-    
+    updateTrace();
 }
 
 // Update trace panel
 function updateTrace() {
-    
+
+    // Clear existing stuff
+    $("#traceTab").html("");
+
+    var ul = $("<ul/>");
+    $("#traceTab").append(ul);
+
+    var livec = [];
+    var j=0;
+    for (var i=0; i<log.variableNames.length; i++) {
+        var thisName = log.variableNames[i];
+        if ($("#var_" + thisName).is(":checked")) {
+            livec.push($("<li/>"));
+            ul.append(livec[j]);
+
+            j += 1;
+        }
+    }
+
+    var fullHeight = 0.95*$("#traceTab").innerHeight();
+    var fullWidth = $("#traceTab").innerWidth();
+
+    j=0;
+    for (var i=0; i<log.variableNames.length; i++) {
+        var thisName = log.variableNames[i];
+        if ($("#var_" + thisName).is(":checked")) {
+            
+            livec[j].height(fullHeight/livec.length);
+            livec[j].width(fullWidth);
+            var options = {labels: ["Sample", log.variableNames[1]],
+                           xlabel: "Sample",
+                           ylabel: log.variableNames[i],
+                           width: fullWidth};
+            new Dygraph(livec[j].get(0),
+                        log.variableLogs[i].getSampleArray(),
+                        options);
+
+            j += 1;
+        }
+    }
+
 }
 
 // Redraw everything following file (re)load / window size change
@@ -184,8 +222,11 @@ function update() {
     if (logFile === undefined) {
         updateDropPanel();
         $("#mainPanel").addClass("ui-helper-hidden");
+        $("#dropPanel").removeClass("ui-helper-hidden");
     } else {
         $("#mainPanel").removeClass("ui-helper-hidden");
+        $("#dropPanel").addClass("ui-helper-hidden");
+        updateMainPanel();
     }
 
     updateVariableCheckboxes();
@@ -268,6 +309,8 @@ var VariableLog = Object.create({}, {
     burninFrac: {value: 0.1, writable: true},
     burninEnd: {value: undefined, writable: true},
 
+    sampleArray: {value: undefined, writable: true},
+
     init: {value: function(name) {
         this.name = name;
         this.samples = [];
@@ -289,6 +332,20 @@ var VariableLog = Object.create({}, {
         this.mode = undefined;
         this.variance = undefined;
         this.ESS = undefined;
+        this.sampleArray = undefined;
+    }},
+
+    // Retrieve array of sample data for plotting
+    getSampleArray: {value: function() {
+        if (this.sampleArray == undefined) {
+            this.sampleArray = [];
+            var n = this.samples.length - this.sampleStart;
+            
+            for (var i=this.sampleStart; i<this.samples.length; i++)
+                this.sampleArray.push([this.sampleIndices[i], this.samples[i]]);
+        }
+
+        return this.sampleArray;
     }},
 
     getESS: {value: function() {
