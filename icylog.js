@@ -306,6 +306,12 @@ function updateTrace() {
     var fullHeight = $("#traceTab").height() - 50;
     var traceCount = Object.keys(traceElements).length;
 
+    var legend;
+    if (traceCount>1)
+        legend = "default";
+    else
+        legend = "always";
+
     for (var i=0; i<Object.keys(traceElements).length; i++) {
         var key = Object.keys(traceElements)[i];
         traceElements[key][0].css("height", fullHeight/traceCount);
@@ -323,7 +329,7 @@ function updateTrace() {
                            xlabel: "Sample",
                            ylabel: log.variableNames[variableIndex],
                            connectSeparatedPoints: true,
-                           legend: "always",
+                           legend: legend,
                            series: {
                                "Mode": {strokeWidth: 2},
                                "lower 95% HPD": {strokeWidth: 2},
@@ -335,7 +341,8 @@ function updateTrace() {
         } else {
             traceElements[key][1].resize();
             traceElements[key][1].updateOptions({
-                "file": log.variableLogs[variableIndex].getSampleRecords()
+                file: log.variableLogs[variableIndex].getSampleRecords(),
+                legend: legend
             });
         }
         
