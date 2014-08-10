@@ -41,7 +41,14 @@ body {
 }
 
 #variables label.ui-button {
-    width: 100%;
+    width: 90%;
+}
+
+#variables div {
+    padding: 0px;
+    margin: 0px;
+    width: 5%;
+    float: right;
 }
 
 
@@ -94,16 +101,9 @@ body {
     height: 100%;
 }
 
-#traceTab ul {
-    padding: 0px;
+#traceTab div {
     margin: 0px;
-    display: table;
-}
-
-#traceTab ul li {
     padding: 0px;
-    margin: 0px;
-    display: table-row;
 }
 
 /***** Drop Panel *****/

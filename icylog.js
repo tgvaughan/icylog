@@ -28,7 +28,8 @@ var logFile = undefined;
 var logFileData = undefined;
 var log = undefined;
 
-var tracePlots = [];
+var variableElements = {};
+var traceElements = {};
 
 // Page initialisation code:
 $(document).ready(function() {
@@ -149,6 +150,11 @@ function sanitizeName(name) {
     return name.replace(".","_").replace(" ","_");
 };
 
+// Get array of selected variable indices:
+function getSelectedVariableIndices() {
+    
+}
+
 // Update variable checkboxes:
 function updateVariableCheckboxes() {
     if (log === undefined) {
@@ -158,40 +164,49 @@ function updateVariableCheckboxes() {
 
     $("#variables").removeClass("ui-helper-hidden");
 
-    $("#variables > input").each(function(index, value) {
-        var keep = false;
-        for (var i=0; i<log.variableNames.length; i++) {
-            var thisName = log.variableNames[i];
-            if ("check_" + sanitizeName(thisName) == $(this).attr("id")) {
-                keep = true;
-                break;
-            }
-        }
+    // Remove stale checkboxes
+    var eidx = 0;
+    while (eidx<Object.keys(variableElements).length) {
+        var key = Object.keys(variableElements)[eidx];
+        if (log.variableNames.indexOf(key)<0) {
+            variableElements[key][0].remove();
+            variableElements[key][1].remove();
+            variableElements[key][2].remove();
 
-        if (!keep) {
-            $(value).next().remove();
-            $(value).remove();
+            delete variableElements[key];
         }
-            
-    });
+        else
+            eidx += 1;
+    }
 
+    // Add new checkboxes
     for (var i=0; i<log.variableNames.length; i++) {
         var thisName = log.variableNames[i];
-        var idstr = "check_" + sanitizeName(thisName);
+        var idStr = "check_" + sanitizeName(thisName);
 
-        if ($("#"+idstr).length==0) {
+        if (variableElements[thisName] == undefined) {
             var checkbox = $("<input/>")
                     .attr("type", "checkbox")
-                    .attr("id", idstr);
+                    .attr("id", idStr);
 
             var label = $("<label/>")
-                    .attr("for", idstr)
+                    .attr("for", idStr)
                     .html(thisName);
 
-            $("#variables").append(checkbox).append(label);
-            checkbox.button();
+            var colourBox = $("<div/>")
+                    .css("background-color", log.variableLogs[i].getESSColour())
+                    .html("&nbsp;");
 
+            variableElements[thisName] = [checkbox, label, colourBox];
+
+            $("#variables").append(checkbox).append(label).append(colourBox);
+            checkbox.button();
+            checkbox.button("widget")
+                    .attr("title", log.variableLogs[i].getStatsString());
             checkbox.change(updateMainPanel);
+        } else {
+            variableElements[thisName][2].css("background-color",
+                                              log.variableLogs[i].getESSColour());
         }
     }
 }
@@ -203,55 +218,63 @@ function updateMainPanel() {
 // Update trace panel
 function updateTrace() {
 
-    // Clear existing stuff
-
-    var ul = $("#traceTab > ul");
-    if (ul.length == 0) {
-        ul = $("<ul/>");
-        $("#traceTab").append(ul);
-    }
-
-    ul.children().each(function() {
-        var variableName = $(this).attr("id").replace("check_","");
-        var index = log.variableNames.indexOf(variableName);
-        if (index<0)
-            $(this).remove();
-    });
-
-    var livec = [];
-    var j=0;
-    for (var i=0; i<log.variableNames.length; i++) {
-        var thisName = log.variableNames[i];
-        if ($("#" + "check_" + sanitizeName(thisName)).is(":checked")) {
-            livec.push($("<li/>"));
-            ul.append(livec[j]);
-
-            j += 1;
+    // Remove stale traces
+    for (var i=0; i<Object.keys(traceElements).length; i++) {
+        var key = Object.keys(traceElements)[i];
+        if (log.variableNames.indexOf(key)<0 || !variableElements[key][0].is(":checked")) {
+            traceElements[key][0].remove();
+            traceElements[key][1].destroy();
+            delete traceElements[key];
         }
     }
 
-    var fullHeight = 0.95*$("#traceTab").innerHeight();
-    var fullWidth = $("#traceTab").innerWidth();
-
-    j=0;
+    // Assemble required <div> elements
     for (var i=0; i<log.variableNames.length; i++) {
         var thisName = log.variableNames[i];
-        if ($("#" + "check_" + sanitizeName(thisName)).is(":checked")) {
-            
-            livec[j].height(fullHeight/livec.length);
-            livec[j].width(fullWidth);
-            var options = {labels: ["Sample", log.variableNames[i]],
+        if (traceElements[thisName] === undefined &&
+            variableElements[thisName][0].is(":checked")) {
+            traceElements[thisName] = [$("<div/>"), undefined];
+            $("#traceTab").append(traceElements[thisName][0]);
+        }
+    }
+
+    var fullHeight = $("#traceTab").height() - 50;
+    var traceCount = Object.keys(traceElements).length;
+
+    for (var i=0; i<Object.keys(traceElements).length; i++) {
+        var key = Object.keys(traceElements)[i];
+        traceElements[key][0].css("height", fullHeight/traceCount);
+    }
+
+    for (var i=0; i<Object.keys(traceElements).length; i++) {
+        var key = Object.keys(traceElements)[i];
+        var variableIndex = log.variableNames.indexOf(key);
+
+        if (traceElements[key][1] === undefined) {
+
+
+            var options = {labels: ["Sample", "Trace",
+                                    "Mode", "lower 95% HPD", "upper 95% HPD"],
                            xlabel: "Sample",
-                           ylabel: log.variableNames[i],
-                           width: fullWidth};
-            new Dygraph(livec[j].get(0),
-                        log.variableLogs[i].getSampleArray(),
+                           ylabel: log.variableNames[variableIndex],
+                           connectSeparatedPoints: true,
+                           legend: "always",
+                           series: {
+                               "Mode": {strokeWidth: 2},
+                               "lower 95% HPD": {strokeWidth: 2},
+                               "upper 95% HPD": {strokeWidth: 2}}};
+            
+            traceElements[key][1] = new Dygraph(traceElements[key][0].get(0),
+                        log.variableLogs[variableIndex].getSampleRecords(),
                         options);
-
-            j += 1;
+        } else {
+            traceElements[key][1].resize();
+            traceElements[key][1].updateOptions({
+                "file": log.variableLogs[variableIndex].getSampleRecords()
+            });
         }
+        
     }
-
 }
 
 // Redraw everything following file (re)load / window size change
@@ -272,6 +295,9 @@ function update() {
           PROTOTYPES
  ****************************/
 
+/**
+* Prototype object representing the data contained in a log file.
+*/
 var Log = Object.create({}, {
     variableLogs: {value: [], writable: true},
     variableNames: {value: [], writable: true},
@@ -333,66 +359,87 @@ var Log = Object.create({}, {
     }}
 });
 
-// Prototype object representing a log of a single variable
+/**
+* Prototype object representing a log of a single variable
+*/
 var VariableLog = Object.create({}, {
     name: {value: "", writable: true},
     samples: {value: [], writable: true},
     sampleIndices: {value: [], writable: true},
+    sampleRecords: {value: [], writable: true},
+
     ESS: {value: undefined, writable: true},
+    ESScalcSteps: {value: 5000, writable: true},
+
     mean: {value: undefined, writable: true},
     variance: {value: undefined, writable: true},
-    mode: {value: undefined, writable: true},
-    burninFrac: {value: 0.1, writable: true},
-    burninEnd: {value: undefined, writable: true},
+    HPDandMode: {value: undefined, writable: true},
 
-    sampleArray: {value: undefined, writable: true},
+    burninFrac: {value: 0.1, writable: true},
 
     init: {value: function(name) {
         this.name = name;
         this.samples = [];
         this.sampleIndices = [];
+        this.sampleRecords = [];
         this.ESS = [];
 
         return this;
     }},
 
-    addSample: {value: function(sample, sampleIdx) {
+    addSample: {value: function(sampleStr, sampleIdxStr) {
+
+        var sample = parseFloat(sampleStr);
+        var sampleIdx = parseInt(sampleIdxStr);
+
         // Include sample in sample list
-        this.samples.push(parseFloat(sample));
-        this.sampleIndices.push(parseInt(sampleIdx));
+        this.samples.push(sample);
+        this.sampleIndices.push(sampleIdx);
+        this.sampleRecords.push([sampleIdx, sample, null, null, null]);
+
+        // Clear existing mean and 95% HPDs
+        if (this.sampleRecords.length>=2) {
+            this.sampleRecords[this.sampleRecords.length-2][2] = null;
+            this.sampleRecords[this.sampleRecords.length-2][3] = null;
+            this.sampleRecords[this.sampleRecords.length-2][4] = null;
+        }
 
         this.sampleStart = Math.floor(this.burninFrac*this.samples.length);
 
         // Invalidate previously calculated stats
         this.mean = undefined;
-        this.mode = undefined;
         this.variance = undefined;
+        this.HPDandMode = undefined;
         this.ESS = undefined;
-        this.sampleArray = undefined;
     }},
 
-    // Retrieve array of sample data for plotting
-    getSampleArray: {value: function() {
-        if (this.sampleArray == undefined) {
-            this.sampleArray = [];
-            var n = this.samples.length - this.sampleStart;
-            
-            for (var i=this.sampleStart; i<this.samples.length; i++)
-                this.sampleArray.push([this.sampleIndices[i], this.samples[i]]);
-        }
-
-        return this.sampleArray;
-    }},
-
+    /**
+     * Calculate rough ESS using at most as many samples as specified
+     * by ESScalcSteps.
+     */
     getESS: {value: function() {
         if (this.ESS == undefined) {
 
-            var n = this.samples.length - this.sampleStart;
+            var N = this.samples.length - this.sampleStart;
+            var step = Math.ceil(Math.max(1, N/this.ESScalcSteps));
+            var n = Math.floor(N/step);
+
+            var roughMean = 0.0;
+            var roughStd = 0.0;
+
+            for (var i=0; i<n; i++) {
+                var thisVal = this.samples[this.sampleStart+i*step];
+                roughMean += thisVal;
+                roughStd += thisVal*thisVal;
+            }
+            roughMean /= n;
+            roughStd = Math.sqrt(roughStd/n - roughMean*roughMean);
 
             var real = new Array(n);
             var imag = new Array(n);
+
             for (var i=0; i<n; i++) {
-                real[i] = (this.samples[i+this.sampleStart] - this.getMean())/Math.sqrt(this.getVariance());
+                real[i] = (this.samples[this.sampleStart+i*step] - roughMean)/roughStd;
                 imag[i] = 0.0;
             }
 
@@ -454,10 +501,70 @@ var VariableLog = Object.create({}, {
     }},
 
     getMode: {value: function() {
-        if (this.mode == undefined) {
+        return this.getHPDandMode()[2];
+    }},
+
+    getHPDlower: {value: function() {
+        return this.getHPDandMode()[0];
+    }},
+
+    getHPDupper: {value: function() {
+        return this.getHPDandMode()[1];
+    }},
+
+    getHPDandMode: {value: function() {
+        if (this.HPDandMode == undefined) {
+            var sorted = this.samples.slice(this.sampleStart).sort(
+                function(a,b) {return a-b;});
+
+            var n = sorted.length;
+            var lower = sorted[Math.round(0.025*n)];
+            var upper = sorted[Math.round(0.975*n)];
+            var mode = sorted[Math.round(0.5*n)];
+
+            this.HPDandMode = [lower, upper, mode];
         }
 
-        return this.mode;
+        return this.HPDandMode;
+    }},
+
+    /**
+     * Retrieve the sample records corresponding to this variable.
+     */
+    getSampleRecords: {value: function() {
+        if (this.sampleRecords.length>0) {
+            this.sampleRecords[0][2] = this.getMode();
+            this.sampleRecords[this.sampleRecords.length-1][2] = this.getMode();
+            this.sampleRecords[0][3] = this.getHPDlower();
+            this.sampleRecords[this.sampleRecords.length-1][3] = this.getHPDlower();
+            this.sampleRecords[0][4] = this.getHPDupper();
+            this.sampleRecords[this.sampleRecords.length-1][4] = this.getHPDupper();
+        }
+
+        return this.sampleRecords;
+    }},
+
+    /**
+     * Convert ESS to colour string.
+     */
+    getESSColour: {value: function() {
+
+        var goodness = Math.min(1.0, this.getESS()/200.0);
+
+        var red = Math.round(255*0.8*(1.0 - goodness));
+        var green = Math.round(255*0.8*goodness);
+        
+        return "#" +
+            ("00" + red.toString(16)).slice(-2) +
+            ("00" + green.toString(16)).slice(-2) + "00";
+    }},
+
+    getStatsString: {value: function() {
+        return "ESS: " + this.getESS().toPrecision(5) + " (rough, max 5000)\n" +
+            "Mean: " + this.getMean().toPrecision(5) + "\n" +
+            "Mode: " + this.getMode().toPrecision(5) + "\n" +
+            "Variance: " + this.getVariance().toPrecision(5) + "\n" +
+            "95% HPD interval: [" + this.getHPDlower().toPrecision(5) +
+            ", " + this.getHPDupper().toPrecision(5) + "]";
     }}
-    
 });
