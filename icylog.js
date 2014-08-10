@@ -31,6 +31,8 @@ var log = undefined;
 var variableElements = {};
 var traceElements = {};
 
+var pollingIntervalID = undefined;
+
 // Page initialisation code:
 $(document).ready(function() {
 
@@ -60,12 +62,12 @@ $(document).ready(function() {
         my: "left",
         at: "right+10",
         of: $("#load").button("widget")});
-    $("#periodicPolling").button({disabled: true});
+    $("#polling").button({disabled: true});
     $("select").selectmenu({disabled: true, width: 100});
     $("select").selectmenu("widget").position({
         my: "left",
         at: "right+10",
-        of: $("#periodicPolling").button("widget")});
+        of: $("#polling").button("widget")});
 
     // Set up help menu on left panel
     $("#helpButton").button({disabled: true});
@@ -83,6 +85,15 @@ $(document).ready(function() {
     $("#fileInput").change(function() {
         logFile = $("#fileInput").prop("files")[0];
         loadFile();
+    });
+    $("#reload").click(function() {
+        loadFile();
+    });
+    $("#polling").change(function() {
+        togglePolling();
+    });
+    $("#pollingInterval").on("selectmenuchange", function() {
+        updatePollingInterval();
     });
 
     // Dialog boxes
@@ -121,8 +132,66 @@ function reloadLogData() {
         return;
 
     log = Object.create(Log, {}).init(logFileData, "\t");
+    updateLoadingButtons();
     updateVariableCheckboxes();
     update();
+}
+
+// Special reload function used by polling
+function pollingReloadData() {
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        logFileData = evt.target.result;
+        log = Object.create(Log, {}).init(logFileData, "\t");
+        updateVariableCheckboxes();
+        update();
+    };
+    reader.readAsText(logFile);
+}
+
+// Toggle periodic reloading of file:
+function togglePolling() {
+    if ($("#polling").is(":checked")) {
+        // Start polling
+
+        // Disable load and reload while polling is active
+        $("#load").button({disabled: true});
+        $("#reload").button({disabled: true});
+
+        pollingIntervalID = setInterval(pollingReloadData,
+                                        parseInt($("#pollingInterval").val())*1000);
+
+    } else {
+        // Stop polling
+
+        clearInterval(pollingIntervalID);
+
+        // Re-enable load and reload when polling is finished
+        $("#load").button({disabled: false});
+        $("#reload").button({disabled: false});
+    }
+}
+
+// Function to update polling interval while polling is active
+function updatePollingInterval() {
+    if ($("#polling").is(":checked")) {
+        clearInterval(pollingIntervalID);
+        pollingIntervalID = setInterval(pollingReloadData,
+                                        parseInt($("#pollingInterval").val())*1000);
+    }
+}
+
+// Enable/disable appropriate loading buttons
+function updateLoadingButtons() {
+    if (logFileData === undefined) {
+        $("#reload").button({disabled: true});
+        $("#polling").button({disabled: true});
+        $("#pollingInterval").selectmenu({disabled: true});
+    } else {
+        $("#reload").button({disabled: false});
+        $("#polling").button({disabled: false});
+        $("#pollingInterval").selectmenu({disabled: false});
+    }
 }
 
 // Ensure SVG is positioned correctly in drop panel.
@@ -150,10 +219,6 @@ function sanitizeName(name) {
     return name.replace(".","_").replace(" ","_");
 };
 
-// Get array of selected variable indices:
-function getSelectedVariableIndices() {
-    
-}
 
 // Update variable checkboxes:
 function updateVariableCheckboxes() {
@@ -201,13 +266,13 @@ function updateVariableCheckboxes() {
 
             $("#variables").append(checkbox).append(label).append(colourBox);
             checkbox.button();
-            checkbox.button("widget")
-                    .attr("title", log.variableLogs[i].getStatsString());
             checkbox.change(updateMainPanel);
-        } else {
-            variableElements[thisName][2].css("background-color",
-                                              log.variableLogs[i].getESSColour());
         }
+
+        variableElements[thisName][0].button("widget")
+                    .attr("title", log.variableLogs[i].getStatsString());
+        variableElements[thisName][2].css("background-color",
+                                          log.variableLogs[i].getESSColour());
     }
 }
 
