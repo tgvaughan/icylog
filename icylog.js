@@ -625,8 +625,14 @@ var VariableLog = Object.create({}, {
 
         var goodness = Math.min(1.0, this.getESS()/200.0);
 
-        var red = Math.round(255*0.8*(1.0 - goodness));
-        var green = Math.round(255*0.8*goodness);
+        var red, green;
+        if (goodness<0.5) {
+            red = Math.round(255*0.8);
+            green = Math.round(255*0.8*goodness/0.5);
+        } else {
+            green = Math.round(255*0.8);
+            red = Math.round(255*0.8*(1.0-goodness)/0.5);
+        }
         
         return "#" +
             ("00" + red.toString(16)).slice(-2) +
