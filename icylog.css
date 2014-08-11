@@ -124,7 +124,13 @@ body {
 
 /***** Miscellaneous *****/
 
+/* Put file input element where the sun don't shine. */
 #fileInput {
     position: absolute;
     left: -9999px;
+}
+
+/* Ensure long variable names don't result in too much ugliness. */
+.ui-button-text {
+    overflow: hidden;
 }
