@@ -326,14 +326,16 @@ function updateTrace() {
 
             var options = {labels: ["Sample", "Trace",
                                     "Mode", "lower 95% HPD", "upper 95% HPD"],
+                           colors: ["#CC6600", "#003366", "#003366", "#003366"],
                            xlabel: "Sample",
                            ylabel: log.variableNames[variableIndex],
                            connectSeparatedPoints: true,
                            legend: legend,
+                           labelsSeparateLines: true,
                            series: {
                                "Mode": {strokeWidth: 2},
-                               "lower 95% HPD": {strokeWidth: 2},
-                               "upper 95% HPD": {strokeWidth: 2}}};
+                               "lower 95% HPD": {strokeWidth: 2, strokePattern: [10,5]},
+                               "upper 95% HPD": {strokeWidth: 2, strokePattern: [10,5]}}};
             
             traceElements[key][1] = new Dygraph(traceElements[key][0].get(0),
                         log.variableLogs[variableIndex].getSampleRecords(),
