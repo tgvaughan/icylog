@@ -325,7 +325,7 @@ function updateTrace() {
 
 
             var options = {labels: ["Sample", "Trace",
-                                    "Mode", "lower 95% HPD", "upper 95% HPD"],
+                                    "Median", "lower 95% HPD", "upper 95% HPD"],
                            colors: ["#CC6600", "#003366", "#003366", "#003366"],
                            xlabel: "Sample",
                            ylabel: log.variableNames[variableIndex],
@@ -333,7 +333,7 @@ function updateTrace() {
                            legend: legend,
                            labelsSeparateLines: true,
                            series: {
-                               "Mode": {strokeWidth: 2},
+                               "Median": {strokeWidth: 2},
                                "lower 95% HPD": {strokeWidth: 2, strokePattern: [10,5]},
                                "upper 95% HPD": {strokeWidth: 2, strokePattern: [10,5]}}};
             
@@ -447,7 +447,7 @@ var VariableLog = Object.create({}, {
 
     mean: {value: undefined, writable: true},
     variance: {value: undefined, writable: true},
-    HPDandMode: {value: undefined, writable: true},
+    HPDandMedian: {value: undefined, writable: true},
 
     burninFrac: {value: 0.1, writable: true},
 
@@ -483,7 +483,7 @@ var VariableLog = Object.create({}, {
         // Invalidate previously calculated stats
         this.mean = undefined;
         this.variance = undefined;
-        this.HPDandMode = undefined;
+        this.HPDandMedian = undefined;
         this.ESS = undefined;
     }},
 
@@ -574,32 +574,32 @@ var VariableLog = Object.create({}, {
         return this.variance;
     }},
 
-    getMode: {value: function() {
-        return this.getHPDandMode()[2];
+    getMedian: {value: function() {
+        return this.getHPDandMedian()[2];
     }},
 
     getHPDlower: {value: function() {
-        return this.getHPDandMode()[0];
+        return this.getHPDandMedian()[0];
     }},
 
     getHPDupper: {value: function() {
-        return this.getHPDandMode()[1];
+        return this.getHPDandMedian()[1];
     }},
 
-    getHPDandMode: {value: function() {
-        if (this.HPDandMode == undefined) {
+    getHPDandMedian: {value: function() {
+        if (this.HPDandMedian == undefined) {
             var sorted = this.samples.slice(this.sampleStart).sort(
                 function(a,b) {return a-b;});
 
             var n = sorted.length;
             var lower = sorted[Math.round(0.025*n)];
             var upper = sorted[Math.round(0.975*n)];
-            var mode = sorted[Math.round(0.5*n)];
+            var median = sorted[Math.round(0.5*n)];
 
-            this.HPDandMode = [lower, upper, mode];
+            this.HPDandMedian = [lower, upper, median];
         }
 
-        return this.HPDandMode;
+        return this.HPDandMedian;
     }},
 
     /**
@@ -607,8 +607,8 @@ var VariableLog = Object.create({}, {
      */
     getSampleRecords: {value: function() {
         if (this.sampleRecords.length>0) {
-            this.sampleRecords[0][2] = this.getMode();
-            this.sampleRecords[this.sampleRecords.length-1][2] = this.getMode();
+            this.sampleRecords[0][2] = this.getMedian();
+            this.sampleRecords[this.sampleRecords.length-1][2] = this.getMedian();
             this.sampleRecords[0][3] = this.getHPDlower();
             this.sampleRecords[this.sampleRecords.length-1][3] = this.getHPDlower();
             this.sampleRecords[0][4] = this.getHPDupper();
@@ -642,7 +642,7 @@ var VariableLog = Object.create({}, {
     getStatsString: {value: function() {
         return "ESS: " + this.getESS().toPrecision(5) + " (rough, max 5000)\n" +
             "Mean: " + this.getMean().toPrecision(5) + "\n" +
-            "Mode: " + this.getMode().toPrecision(5) + "\n" +
+            "Median: " + this.getMedian().toPrecision(5) + "\n" +
             "Variance: " + this.getVariance().toPrecision(5) + "\n" +
             "95% HPD interval: [" + this.getHPDlower().toPrecision(5) +
             ", " + this.getHPDupper().toPrecision(5) + "]";
