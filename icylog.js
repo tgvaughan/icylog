@@ -146,6 +146,7 @@ function reloadLogData() {
         return;
 
     log = Object.create(Log, {}).init(logFileData, "\t");
+    log.setBurninFrac($("#burninFrac").val());
     updateLoadingButtons();
     update();
 }
