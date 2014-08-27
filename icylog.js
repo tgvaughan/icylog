@@ -397,28 +397,42 @@ function updateHist() {
 
         // Callback function used to display median and HPD intervals on histograms
         var callbackFn = function(canvas, area, g) {
-            
-            var median = variableLog.getMedian();
-            var hpdLower = variableLog.getHPDlower();
-            var hpdUpper = variableLog.getHPDupper();
+
+            // Holy shit, what a horrible hack!!  Used to pass the log
+            // to the callback without using refering to the outer
+            // lexical environment.
+            var thislog = arguments.callee.log;
+
+            var median = thislog.getMedian();
+            var hpdLower = thislog.getHPDlower();
+            var hpdUpper = thislog.getHPDupper();
 
             var left = g.toDomCoords(hpdLower, 0)[0];
             var right = g.toDomCoords(hpdUpper, 0)[0];
             var center = g.toDomCoords(median, 0)[0];
 
             canvas.save();
-            canvas.fillStyle = "rgba(210, 255, 210, 1.0)";
+            canvas.fillStyle = "rgba(200, 255, 200, 1.0)";
             canvas.fillRect(left, area.y, right-left, area.h);
 
             canvas.strokeStyle = "rgba(0, 150, 0, 1.0)";
-            canvas.beginPath();
-            canvas.moveTo(center, area.y);
-            canvas.lineTo(center, area.y+area.h);
-            canvas.closePath();
-            canvas.stroke();
+
+            var drawLine = function(xpos, width, ctx) {
+                canvas.lineWidth = width;
+                canvas.beginPath();
+                canvas.moveTo(xpos, area.y);
+                canvas.lineTo(xpos, area.y+area.h);
+                canvas.closePath();
+                canvas.stroke();
+            };
+
+            drawLine(center, 3);
+            drawLine(left, 1);
+            drawLine(right, 1);
 
             canvas.restore();
         };
+        callbackFn.log = variableLog;
 
         if (histElements[key][1] === undefined) {
 
@@ -430,6 +444,8 @@ function updateHist() {
                            ylabel: "Frequency",
                            connectSeparatedPoints: true,
                            labelsSeparateLines: true,
+                           drawPoints: true,
+                           pointSize: 4,
                            underlayCallback: callbackFn};
             
             histElements[key][1] = new Dygraph(histElements[key][0].get(0),
@@ -756,7 +772,7 @@ var VariableLog = Object.create({}, {
             var nSamples = this.samples.length - this.sampleStart;            
 
             // Sturges' rule
-            var nBins = Math.ceil(Math.log2(nSamples) + 1);
+            var nBins = Math.ceil(Math.log(nSamples)/Math.log(2) + 1);
 
             // "Excel" rule  (maybe makes sense with Poissonian noise?)
             //var nBins = Math.ceil(Math.sqrt(nSamples)); 
