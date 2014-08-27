@@ -395,23 +395,54 @@ function updateHist() {
         histogramData.push([variableLog.getRange()[1],0]);
         histogramData.splice(0, 0, [variableLog.getRange()[0],0]);
 
+        // Callback function used to display median and HPD intervals on histograms
+        var callbackFn = function(canvas, area, g) {
+            
+            var median = variableLog.getMedian();
+            var hpdLower = variableLog.getHPDlower();
+            var hpdUpper = variableLog.getHPDupper();
+
+            var left = g.toDomCoords(hpdLower, 0)[0];
+            var right = g.toDomCoords(hpdUpper, 0)[0];
+            var center = g.toDomCoords(median, 0)[0];
+
+            canvas.save();
+            canvas.fillStyle = "rgba(210, 255, 210, 1.0)";
+            canvas.fillRect(left, area.y, right-left, area.h);
+
+            canvas.strokeStyle = "rgba(0, 150, 0, 1.0)";
+            canvas.beginPath();
+            canvas.moveTo(center, area.y);
+            canvas.lineTo(center, area.y+area.h);
+            canvas.closePath();
+            canvas.stroke();
+
+            canvas.restore();
+        };
+
         if (histElements[key][1] === undefined) {
 
+            // Create new plot
 
             var options = {labels: ["Bin Centre", "Frequency"],
                            colors: ["#0000FF"],
                            xlabel: log.variableNames[variableIndex],
                            ylabel: "Frequency",
                            connectSeparatedPoints: true,
-                           labelsSeparateLines: true};
+                           labelsSeparateLines: true,
+                           underlayCallback: callbackFn};
             
             histElements[key][1] = new Dygraph(histElements[key][0].get(0),
                                                histogramData,
                                                options);
         } else {
+            
+            // Update existing plot
+
             histElements[key][1].resize();
             histElements[key][1].updateOptions({
-                file: histogramData
+                file: histogramData,
+                underlayCallback: callbackFn
             });
         }
         
@@ -722,21 +753,27 @@ var VariableLog = Object.create({}, {
         if (this.histogram == undefined) {
 
             var range = this.getRange();
-            var n = this.samples.length - this.sampleStart;            
-            var k = Math.ceil(Math.log2(n) + 1);
-            var binwidth = (range[1]-range[0])/k;
+            var nSamples = this.samples.length - this.sampleStart;            
+
+            // Sturges' rule
+            var nBins = Math.ceil(Math.log2(nSamples) + 1);
+
+            // "Excel" rule  (maybe makes sense with Poissonian noise?)
+            //var nBins = Math.ceil(Math.sqrt(nSamples)); 
+
+            var binwidth = (range[1]-range[0])/nBins;
 
             this.histogram = [];
-            for (var i=0; i<k; i++)
+            for (var i=0; i<nBins; i++)
                 this.histogram[i] = [range[0]+binwidth*(i+0.5), 0];
 
             for (var i=this.sampleStart; i<this.samples.length; i++) {
-                var thisk = Math.floor((this.samples[i]-range[0])/binwidth);
+                var thisBin = Math.floor((this.samples[i]-range[0])/binwidth);
 
-                if (thisk==k && this.samples[i]==range[1])
-                    thisk -= 1;
+                if (thisBin==nBins && this.samples[i]==range[1])
+                    thisBin -= 1;
 
-                this.histogram[thisk][1] += 1;
+                this.histogram[thisBin][1] += 1;
             }
         }
 
