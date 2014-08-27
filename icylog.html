@@ -57,16 +57,22 @@
       <div id="options" class="ui-widget ui-widget-content ui-corner-all">
         <ul>
           <li><button id="load">Load...</button> <button id="reload">Reload</button></li>
-          <li><input type="checkbox" id="polling">
-            <label for="polling">Polling</label>
-
+          <li><input type="checkbox" name="polling" id="polling"><label for="polling">Polling</label>
             <select name="pollingInterval" id="pollingInterval">
               <option value="5">5 sec</option>
               <option value="10">10 sec</option>
               <option value="30">30 sec</option>
               <option value="60">60 sec</option>
             </select>
-
+          </li>
+          <li>Burn-in:
+            <select name="burninFrac" id="burninFrac">
+              <option value="0">Off</option>
+              <option value="0.05">5%</option>
+              <option value="0.1" selected="selected">10%</option>
+              <option value="0.2">20%</option>
+              <option value="0.5">50%</option>
+            </select>
           </li>
         </ul>
       </div>
