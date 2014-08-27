@@ -29,7 +29,10 @@ body {
 #options li {
     text-align: center;
     list-style: none;
-    margin-bottom: 0px;
+}
+
+#options li:last-child {
+    padding-bottom: 10px;
 }
 
 

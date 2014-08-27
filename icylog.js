@@ -66,11 +66,16 @@ $(document).ready(function() {
         at: "right+10",
         of: $("#load").button("widget")});
     $("#polling").button({disabled: true});
-    $("select").selectmenu({disabled: true, width: 100});
-    $("select").selectmenu("widget").position({
+    $("#pollingInterval").selectmenu({disabled: true, width: 100});
+    $("#pollingInterval").selectmenu("widget").position({
         my: "left",
         at: "right+10",
         of: $("#polling").button("widget")});
+    $("#burninFrac").selectmenu({width: 100});
+    $("#burninFrac").selectmenu("widget").position({
+        my: "top",
+        at: "bottom+10",
+        of: $("#pollingInterval").selectmenu("widget")});
 
     // Set up help menu on left panel
     $("#helpButton").button({disabled: true});
@@ -97,6 +102,12 @@ $(document).ready(function() {
     });
     $("#pollingInterval").on("selectmenuchange", function() {
         updatePollingInterval();
+    });
+    $("#burninFrac").on("selectmenuchange", function() {
+        if (log != undefined) {
+            log.setBurninFrac($("#burninFrac").val());
+            update();
+        }
     });
 
     // Dialog boxes
@@ -136,7 +147,6 @@ function reloadLogData() {
 
     log = Object.create(Log, {}).init(logFileData, "\t");
     updateLoadingButtons();
-    updateVariableCheckboxes();
     update();
 }
 
@@ -146,7 +156,6 @@ function pollingReloadData() {
     reader.onload = function(evt) {
         logFileData = evt.target.result;
         log = Object.create(Log, {}).init(logFileData, "\t");
-        updateVariableCheckboxes();
         update();
     };
     reader.readAsText(logFile);
@@ -489,9 +498,9 @@ function update() {
     } else {
         $("#mainPanel").removeClass("ui-helper-hidden");
         $("#dropPanel").addClass("ui-helper-hidden");
+        updateVariableCheckboxes();
         updateMainPanel();
     }
-
 }
 
 /****************************
@@ -559,6 +568,13 @@ var Log = Object.create({}, {
         }
 
         return this;
+    }},
+
+    setBurninFrac: {value: function(newBurnin) {
+        for (var vidx=0; vidx<this.variableLogs.length; vidx++) {
+            this.variableLogs[vidx].setBurninFrac(newBurnin);
+            this.variableLogs[vidx].invalidateStats();
+        }
     }}
 });
 
@@ -604,15 +620,17 @@ var VariableLog = Object.create({}, {
         this.sampleRecords.push([sampleIdx, sample, null, null, null]);
 
         // Clear existing mean and 95% HPDs
-        if (this.sampleRecords.length>=2) {
-            this.sampleRecords[this.sampleRecords.length-2][2] = null;
-            this.sampleRecords[this.sampleRecords.length-2][3] = null;
-            this.sampleRecords[this.sampleRecords.length-2][4] = null;
-        }
-
         this.sampleStart = Math.floor(this.burninFrac*this.samples.length);
+        this.invalidateStats();
+    }},
 
-        // Invalidate previously calculated stats
+    setBurninFrac: {value: function(newBurninFrac) {
+        this.burninFrac = newBurninFrac;
+        this.sampleStart = Math.floor(this.burninFrac*this.samples.length);
+    }},
+
+    // Invalidate previously calculated stats
+    invalidateStats: {value: function() {
         this.mean = undefined;
         this.variance = undefined;
         this.HPDandMedian = undefined;
@@ -747,18 +765,23 @@ var VariableLog = Object.create({}, {
 
     /**
      * Retrieve the sample records corresponding to this variable.
+     *
+     * Omits burnin.
      */
     getSampleRecords: {value: function() {
-        if (this.sampleRecords.length>0) {
-            this.sampleRecords[0][2] = this.getMedian();
-            this.sampleRecords[this.sampleRecords.length-1][2] = this.getMedian();
-            this.sampleRecords[0][3] = this.getHPDlower();
-            this.sampleRecords[this.sampleRecords.length-1][3] = this.getHPDlower();
-            this.sampleRecords[0][4] = this.getHPDupper();
-            this.sampleRecords[this.sampleRecords.length-1][4] = this.getHPDupper();
+
+        var sampleRecords = this.sampleRecords.slice(this.sampleStart);
+
+        if (sampleRecords.length>0) {
+            sampleRecords[0][2] = this.getMedian();
+            sampleRecords[sampleRecords.length-1][2] = this.getMedian();
+            sampleRecords[0][3] = this.getHPDlower();
+            sampleRecords[sampleRecords.length-1][3] = this.getHPDlower();
+            sampleRecords[0][4] = this.getHPDupper();
+            sampleRecords[sampleRecords.length-1][4] = this.getHPDupper();
         }
 
-        return this.sampleRecords;
+        return sampleRecords;
     }},
 
     /**
