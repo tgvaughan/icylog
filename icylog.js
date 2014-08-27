@@ -332,6 +332,7 @@ function updateTrace() {
                            connectSeparatedPoints: true,
                            legend: legend,
                            labelsSeparateLines: true,
+                           valueRange: log.variableLogs[variableIndex].getRange(),
                            series: {
                                "Median": {strokeWidth: 2},
                                "lower 95% HPD": {strokeWidth: 2, strokePattern: [10,5]},
@@ -344,7 +345,8 @@ function updateTrace() {
             traceElements[key][1].resize();
             traceElements[key][1].updateOptions({
                 file: log.variableLogs[variableIndex].getSampleRecords(),
-                legend: legend
+                legend: legend,
+                valueRange: log.variableLogs[variableIndex].getRange()
             });
         }
         
@@ -448,6 +450,7 @@ var VariableLog = Object.create({}, {
     mean: {value: undefined, writable: true},
     variance: {value: undefined, writable: true},
     HPDandMedian: {value: undefined, writable: true},
+    range: {value: undefined, writable: true},
 
     burninFrac: {value: 0.1, writable: true},
 
@@ -485,6 +488,7 @@ var VariableLog = Object.create({}, {
         this.variance = undefined;
         this.HPDandMedian = undefined;
         this.ESS = undefined;
+        this.range = undefined;
     }},
 
     /**
@@ -600,6 +604,15 @@ var VariableLog = Object.create({}, {
         }
 
         return this.HPDandMedian;
+    }},
+
+    getRange: {value: function() {
+        if (this.range == undefined) {
+            this.range = [Math.max.apply(null, this.samples.slice(this.sampleStart)),
+                          Math.min.apply(null, this.samples.slice(this.sampleStart))];
+        }
+
+        return this.range;
     }},
 
     /**
