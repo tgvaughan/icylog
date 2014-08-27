@@ -30,6 +30,7 @@ var log = undefined;
 
 var variableElements = {};
 var traceElements = {};
+var histElements = {};
 
 var pollingIntervalID = undefined;
 
@@ -54,7 +55,9 @@ $(document).ready(function() {
     });
 
     // Set up tabs on main panel
-    $("#mainPanel").tabs();
+    $("#mainPanel").tabs({
+        activate: function(event, ui) {updateMainPanel();}
+    });
 
     // Set up options buttons on left panel
     $("#load").button();
@@ -276,9 +279,6 @@ function updateVariableCheckboxes() {
     }
 }
 
-function updateMainPanel() {
-    updateTrace();
-}
 
 // Update trace panel
 function updateTrace() {
@@ -332,6 +332,7 @@ function updateTrace() {
                            connectSeparatedPoints: true,
                            legend: legend,
                            labelsSeparateLines: true,
+                           valueRange: log.variableLogs[variableIndex].getRange(),
                            series: {
                                "Median": {strokeWidth: 2},
                                "lower 95% HPD": {strokeWidth: 2, strokePattern: [10,5]},
@@ -344,10 +345,122 @@ function updateTrace() {
             traceElements[key][1].resize();
             traceElements[key][1].updateOptions({
                 file: log.variableLogs[variableIndex].getSampleRecords(),
-                legend: legend
+                legend: legend,
+                valueRange: log.variableLogs[variableIndex].getRange()
             });
         }
         
+    }
+}
+
+// Update histogram panel
+function updateHist() {
+
+    // Remove stale histograms
+    for (var i=0; i<Object.keys(histElements).length; i++) {
+        var key = Object.keys(histElements)[i];
+        if (log.variableNames.indexOf(key)<0 || !variableElements[key][0].is(":checked")) {
+            histElements[key][0].remove();
+            histElements[key][1].destroy();
+            delete histElements[key];
+        }
+    }
+
+    // Assemble required <div> elements
+    for (var i=0; i<log.variableNames.length; i++) {
+        var thisName = log.variableNames[i];
+        if (histElements[thisName] === undefined &&
+            variableElements[thisName][0].is(":checked")) {
+            histElements[thisName] = [$("<div/>"), undefined];
+            $("#histTab").append(histElements[thisName][0]);
+        }
+    }
+
+    var fullHeight = $("#histTab").height() - 50;
+    var histCount = Object.keys(histElements).length;
+
+
+    for (var i=0; i<Object.keys(histElements).length; i++) {
+        var key = Object.keys(histElements)[i];
+        histElements[key][0].css("height", fullHeight/histCount);
+    }
+
+    for (var i=0; i<Object.keys(histElements).length; i++) {
+        var key = Object.keys(histElements)[i];
+        var variableIndex = log.variableNames.indexOf(key);
+        var variableName = log.variableNames[variableIndex];
+        var variableLog = log.variableLogs[variableIndex];
+
+        var histogramData = variableLog.getHistogram();
+        histogramData.push([variableLog.getRange()[1],0]);
+        histogramData.splice(0, 0, [variableLog.getRange()[0],0]);
+
+        // Callback function used to display median and HPD intervals on histograms
+        var callbackFn = function(canvas, area, g) {
+            
+            var median = variableLog.getMedian();
+            var hpdLower = variableLog.getHPDlower();
+            var hpdUpper = variableLog.getHPDupper();
+
+            var left = g.toDomCoords(hpdLower, 0)[0];
+            var right = g.toDomCoords(hpdUpper, 0)[0];
+            var center = g.toDomCoords(median, 0)[0];
+
+            canvas.save();
+            canvas.fillStyle = "rgba(210, 255, 210, 1.0)";
+            canvas.fillRect(left, area.y, right-left, area.h);
+
+            canvas.strokeStyle = "rgba(0, 150, 0, 1.0)";
+            canvas.beginPath();
+            canvas.moveTo(center, area.y);
+            canvas.lineTo(center, area.y+area.h);
+            canvas.closePath();
+            canvas.stroke();
+
+            canvas.restore();
+        };
+
+        if (histElements[key][1] === undefined) {
+
+            // Create new plot
+
+            var options = {labels: ["Bin Centre", "Frequency"],
+                           colors: ["#0000FF"],
+                           xlabel: log.variableNames[variableIndex],
+                           ylabel: "Frequency",
+                           connectSeparatedPoints: true,
+                           labelsSeparateLines: true,
+                           underlayCallback: callbackFn};
+            
+            histElements[key][1] = new Dygraph(histElements[key][0].get(0),
+                                               histogramData,
+                                               options);
+        } else {
+            
+            // Update existing plot
+
+            histElements[key][1].resize();
+            histElements[key][1].updateOptions({
+                file: histogramData,
+                underlayCallback: callbackFn
+            });
+        }
+        
+    }
+}
+
+// Update stuff displayed on the main panel
+function updateMainPanel() {
+    switch ($("#mainPanel").tabs("option","active")) {
+
+    case 0: // trace panel
+        updateTrace();
+        break;
+
+    case 1: // histogram panel
+        updateHist();
+        break;
+
     }
 }
 
@@ -448,6 +561,9 @@ var VariableLog = Object.create({}, {
     mean: {value: undefined, writable: true},
     variance: {value: undefined, writable: true},
     HPDandMedian: {value: undefined, writable: true},
+    range: {value: undefined, writable: true},
+
+    histogram: {value: undefined, writable: true},
 
     burninFrac: {value: 0.1, writable: true},
 
@@ -485,6 +601,8 @@ var VariableLog = Object.create({}, {
         this.variance = undefined;
         this.HPDandMedian = undefined;
         this.ESS = undefined;
+        this.range = undefined;
+        this.histogram = undefined;
     }},
 
     /**
@@ -602,6 +720,15 @@ var VariableLog = Object.create({}, {
         return this.HPDandMedian;
     }},
 
+    getRange: {value: function() {
+        if (this.range == undefined) {
+            this.range = [Math.min.apply(null, this.samples.slice(this.sampleStart)),
+                          Math.max.apply(null, this.samples.slice(this.sampleStart))];
+        }
+
+        return this.range;
+    }},
+
     /**
      * Retrieve the sample records corresponding to this variable.
      */
@@ -616,6 +743,42 @@ var VariableLog = Object.create({}, {
         }
 
         return this.sampleRecords;
+    }},
+
+    /**
+     * Retrieve a histogram summarizing this log, excluding burnin.
+     */
+    getHistogram: {value: function() {
+
+        if (this.histogram == undefined) {
+
+            var range = this.getRange();
+            var nSamples = this.samples.length - this.sampleStart;            
+
+            // Sturges' rule
+            var nBins = Math.ceil(Math.log2(nSamples) + 1);
+
+            // "Excel" rule  (maybe makes sense with Poissonian noise?)
+            //var nBins = Math.ceil(Math.sqrt(nSamples)); 
+
+            var binwidth = (range[1]-range[0])/nBins;
+
+            this.histogram = [];
+            for (var i=0; i<nBins; i++)
+                this.histogram[i] = [range[0]+binwidth*(i+0.5), 0];
+
+            for (var i=this.sampleStart; i<this.samples.length; i++) {
+                var thisBin = Math.floor((this.samples[i]-range[0])/binwidth);
+
+                if (thisBin==nBins && this.samples[i]==range[1])
+                    thisBin -= 1;
+
+                this.histogram[thisBin][1] += 1;
+            }
+        }
+
+        return this.histogram;
+
     }},
 
     /**
