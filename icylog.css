@@ -21,20 +21,18 @@ body {
     padding: 5px;
 }
 
-#options ul {
+#options table {
+    width: 100%;
     margin: 0px;
     padding: 0px;
 }
 
-#options li {
+#options table td {
+    width: 100%
+    margin: 0px;
+    padding: 2px;
     text-align: center;
-    list-style: none;
 }
-
-#options li:last-child {
-    padding-bottom: 10px;
-}
-
 
 /* Variable panel */
 
