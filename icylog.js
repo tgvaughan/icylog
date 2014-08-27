@@ -61,21 +61,10 @@ $(document).ready(function() {
 
     // Set up options buttons on left panel
     $("#load").button();
-    $("#reload").button({disabled: true}).position({
-        my: "left",
-        at: "right+10",
-        of: $("#load").button("widget")});
+    $("#reload").button({disabled: true});
     $("#polling").button({disabled: true});
     $("#pollingInterval").selectmenu({disabled: true, width: 100});
-    $("#pollingInterval").selectmenu("widget").position({
-        my: "left",
-        at: "right+10",
-        of: $("#polling").button("widget")});
     $("#burninFrac").selectmenu({width: 100});
-    $("#burninFrac").selectmenu("widget").position({
-        my: "top",
-        at: "bottom+10",
-        of: $("#pollingInterval").selectmenu("widget")});
 
     // Set up help menu on left panel
     $("#helpButton").button({disabled: true});
