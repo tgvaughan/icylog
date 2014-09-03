@@ -61,17 +61,22 @@ body {
     text-align: center;
 }
 
-#helpMenu {
-    position: absolute;
+#shortcutHelp {
+    font: 14px sans-serif;
 }
 
-#helpMenu.ui-menu {
-    width: 250px;
+#shortcutHelp th, td {
+    text-align: left;
+    width: 20px;
 }
 
-/*#helpMenu > li > a {
-    text-decoration: none;
-}*/
+#shortcutHelp tr:nth-of-type(even) {
+    background-color: #eaeaea;
+}
+
+#shortcutHelp table {
+    width: 400px;
+}
 
 #about {
     font: 14px sans-serif;
@@ -83,6 +88,15 @@ body {
     margin: 10px;
 }
 
+#warning {
+    font: 14px sans-serif;
+    text-align: justify;
+}
+
+#warning img {
+    float: right;
+    margin-left: 15px;
+}
 /***** Main Panel *****/
 
 #mainPanel {
