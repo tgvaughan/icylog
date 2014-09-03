@@ -28,6 +28,7 @@
     <script src="fft.js"></script>
 
     <!-- Our own JS and CSS -->
+    <script src="log.js"></script>
     <script src="icylog.js"></script>
     <link rel="stylesheet" type="text/css" href="icylog.css"/>
 
@@ -118,6 +119,15 @@
     <!-- File input element -->
     <input id="fileInput" type="file"/>
 
+    <!-- Keyboard shortcut help -->
+    <div id="shortcutHelp" title="Keyboard shortcuts">
+      <table>
+	<tr><th>Key</th> <th>Action</th></tr>
+	<tr><td>l</td> <td>Load log from file</td></tr>
+	<tr><td>r</td> <td>Reload current file</td></tr>
+	<tr><td>?</td> <td>Keyboard shortcut help</td></tr>
+      </table>
+    </div>
 
     <!-- About box -->
     <div id="about" title="About IcyLog">
@@ -142,6 +152,18 @@
         feel free to open an issue on the project page if you find a bug.</p>
     </div>
 
+    <!-- Browser warning -->
+    <div id="warning" title="Warning">
+      <img src="alert.png"/>
+      <p>This browser does not support all of the features IcyLog
+	requires.  While we are working to improve cross-browser
+	support, there are certain HTML5-related things that are
+	still fundamentally impossible on some platforms.</p>
+
+      <p>Currently, the only way to guarantee not seeing this message
+	is to use a recent version of Google Chrome or Mozilla
+	Firefox. (Safari 6 <i>should</i> be okay as well.)</p>
+    </div>
   </body>
 
 </html>
