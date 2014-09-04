@@ -562,5 +562,15 @@ function keyPressHandler(event) {
         // Reload:
         loadFile();
         break;
+
+    case "t":
+        // Display traces
+        $("#mainPanel").tabs("option", "active", 0);
+        break;
+
+    case "h":
+        // Display histograms
+        $("#mainPanel").tabs("option", "active", 1);
+        break;
     }
 }
