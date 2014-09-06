@@ -66,8 +66,8 @@ $(document).ready(function() {
     $("#load").button();
     $("#reload").button({disabled: true});
     $("#polling").button({disabled: true});
-    $("#pollingInterval").selectmenu({disabled: true, width: 100});
-    $("#burninFrac").selectmenu({width: 100});
+    $("#pollingInterval").selectmenu({disabled: true, width: 80});
+    $("#burninFrac").selectmenu({width: 80});
 
     // Set up help menu on left panel
     $("#helpButton").button();
@@ -320,6 +320,11 @@ function updateVariableCheckboxes() {
         variableElements[thisName][2].css("background-color",
                                           log.variableLogs[i].getESSColour());
     }
+
+    // Set max height for variable panel
+    $("#variables").css("max-height",
+            $("#leftPanel").innerHeight()-
+            ($("#options").innerHeight()+$("#help").innerHeight()+30));
 }
 
 
