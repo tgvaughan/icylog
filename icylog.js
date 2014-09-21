@@ -440,47 +440,69 @@ function updateHist() {
         var variableLog = log.variableLogs[variableIndex];
 
         var histogramData = variableLog.getHistogram();
-        histogramData.push([variableLog.getRange()[1],0]);
-        histogramData.splice(0, 0, [variableLog.getRange()[0],0]);
+        var histogramWindow = variableLog.getHistogramWindow();
 
-        // Callback function used to display median and HPD intervals on histograms
-        var callbackFn = function(canvas, area, g) {
-
-            // Holy shit, what a horrible hack!!  Used to pass the log
-            // to the callback without using refering to the outer
-            // lexical environment.
+        // Callback function responsible for plotting histogram bars.
+        // Colours bars depending on whether or not they fall within the 95% HPD.
+        // Partial colouring of bars which include the HPD boundaries supported.
+        var plotterCallback = function(e) {
             var thislog = arguments.callee.log;
+            var canvas = e.drawingContext;
+            var points = e.points;
 
-            var median = thislog.getMedian();
-            var hpdLower = thislog.getHPDlower();
-            var hpdUpper = thislog.getHPDupper();
+            var yBottom = e.dygraph.toDomYCoord(0);
+            var hpdLeft = e.dygraph.toDomXCoord(thislog.getHPDlower());
+            var hpdRight = e.dygraph.toDomXCoord(thislog.getHPDupper());
 
-            var left = g.toDomCoords(hpdLower, 0)[0];
-            var right = g.toDomCoords(hpdUpper, 0)[0];
-            var center = g.toDomCoords(median, 0)[0];
+            var bar_width = Infinity;
+            for (var i=1; i<points.length; i++) {
+                var sep = points[i].canvasx - points[i-1].canvasx;
+                if (sep < bar_width)
+                    bar_width = sep;
+            }
 
-            canvas.save();
-            canvas.fillStyle = "rgba(200, 255, 200, 1.0)";
-            canvas.fillRect(left, area.y, right-left, area.h);
+            var lineStyle = "rgba(255,255,255,1)";
+            var hpdStyle = "rgba(255,0,0,1)";
+            var regStyle = "rgba(0,0,255,1)";
 
-            canvas.strokeStyle = "rgba(0, 150, 0, 1.0)";
+            for (var i=0; i<points.length; i++) {
+                var point = points[i];
 
-            var drawLine = function(xpos, width, ctx) {
-                canvas.lineWidth = width;
-                canvas.beginPath();
-                canvas.moveTo(xpos, area.y);
-                canvas.lineTo(xpos, area.y+area.h);
-                canvas.closePath();
-                canvas.stroke();
-            };
+                var left = point.canvasx - 0.5*bar_width;
+                var right = point.canvasx + 0.5*bar_width;
 
-            drawLine(center, 3);
-            drawLine(left, 1);
-            drawLine(right, 1);
+                var beforeHPDwidth = Math.max(0, Math.min(bar_width, hpdLeft-left));
+                canvas.fillStyle = regStyle;
+                canvas.fillRect(left,
+                                point.canvasy,
+                                beforeHPDwidth,
+                                yBottom-point.canvasy);
+                left += beforeHPDwidth;
 
-            canvas.restore();
-        };
-        callbackFn.log = variableLog;
+                var HPDwidth = Math.max(0, Math.min(bar_width-beforeHPDwidth, hpdRight-left));
+                canvas.fillStyle = hpdStyle;
+                canvas.fillRect(left,
+                                point.canvasy,
+                                HPDwidth,
+                                yBottom-point.canvasy);
+                left += HPDwidth;
+
+                var afterHPDwidth = Math.max(0, Math.min(bar_width-beforeHPDwidth-HPDwidth, right-hpdRight));
+                canvas.fillStyle = regStyle;
+                canvas.fillRect(left,
+                                point.canvasy,
+                                afterHPDwidth,
+                                yBottom-point.canvasy);
+
+                canvas.strokeStyle = lineStyle;
+                canvas.strokeRect(point.canvasx - 0.5*bar_width,
+                                point.canvasy,
+                                bar_width,
+                                yBottom-point.canvasy);
+            }
+
+        }
+        plotterCallback.log = variableLog;
 
         if (histElements[key][1] === undefined) {
 
@@ -494,7 +516,8 @@ function updateHist() {
                            labelsSeparateLines: true,
                            drawPoints: true,
                            pointSize: 4,
-                           underlayCallback: callbackFn};
+                           dateWindow: histogramWindow,
+                           plotter: plotterCallback};
             
             histElements[key][1] = new Dygraph(histElements[key][0].get(0),
                                                histogramData,
@@ -506,7 +529,8 @@ function updateHist() {
             histElements[key][1].resize();
             histElements[key][1].updateOptions({
                 file: histogramData,
-                underlayCallback: callbackFn
+                dateWindow: histogramWindow,
+                plotter: plotterCallback
             });
         }
         

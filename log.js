@@ -92,6 +92,7 @@ var VariableLog = Object.create({}, {
     range: {value: undefined, writable: true},
 
     histogram: {value: undefined, writable: true},
+    binwidth: {value: undefined, writable: true},
 
     burninFrac: {value: 0.1, writable: true},
 
@@ -291,19 +292,19 @@ var VariableLog = Object.create({}, {
             var nSamples = this.samples.length - this.sampleStart;            
 
             // Sturges' rule
-            var nBins = Math.ceil(Math.log(nSamples)/Math.log(2) + 1);
+            //var nBins = Math.ceil(Math.log(nSamples)/Math.log(2) + 1);
 
             // "Excel" rule  (maybe makes sense with Poissonian noise?)
-            //var nBins = Math.ceil(Math.sqrt(nSamples)); 
+            var nBins = Math.ceil(Math.sqrt(nSamples)); 
 
-            var binwidth = (range[1]-range[0])/nBins;
+            this.binwidth = (range[1]-range[0])/nBins;
 
             this.histogram = [];
             for (var i=0; i<nBins; i++)
-                this.histogram[i] = [range[0]+binwidth*(i+0.5), 0];
+                this.histogram[i] = [range[0]+this.binwidth*(i+0.5), 0];
 
             for (var i=this.sampleStart; i<this.samples.length; i++) {
-                var thisBin = Math.floor((this.samples[i]-range[0])/binwidth);
+                var thisBin = Math.floor((this.samples[i]-range[0])/this.binwidth);
 
                 if (thisBin==nBins && this.samples[i]==range[1])
                     thisBin -= 1;
@@ -314,6 +315,17 @@ var VariableLog = Object.create({}, {
 
         return this.histogram;
 
+    }},
+
+    /**
+    * Retrieve current histogram window.
+    */
+    getHistogramWindow: {value: function() {
+        if (this.histogram == undefined)
+            this.getHistogram();
+
+        return [this.histogram[0][0]-0.5*this.binwidth,
+                this.histogram[this.histogram.length-1][0]+0.5*this.binwidth];
     }},
 
     /**
