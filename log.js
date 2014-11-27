@@ -1,3 +1,27 @@
+/**
+ * @licstart The following is the entire license notice for the
+ * JavaScript code in this page.
+ *
+ * Copyright (C) 2014  Tim Vaughan
+ *
+ *
+ * The JavaScript code in this page is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend The above is the entire license notice for the JavaScript
+ * code in this page.
+ */
 
 /****************************
           PROTOTYPES
@@ -263,22 +287,19 @@ var VariableLog = Object.create({}, {
     /**
      * Retrieve the sample records corresponding to this variable.
      *
-     * Omits burnin.
+     * Omits burnin and populates relevant record fields with median and HPD bounds.
      */
     getSampleRecords: {value: function() {
 
-        var sampleRecords = this.sampleRecords.slice(this.sampleStart);
-
-        if (sampleRecords.length>0) {
-            sampleRecords[0][2] = this.getMedian();
-            sampleRecords[sampleRecords.length-1][2] = this.getMedian();
-            sampleRecords[0][3] = this.getHPDlower();
-            sampleRecords[sampleRecords.length-1][3] = this.getHPDlower();
-            sampleRecords[0][4] = this.getHPDupper();
-            sampleRecords[sampleRecords.length-1][4] = this.getHPDupper();
+        var sampleRecords;
+        if (this.sampleRecords.length>this.sampleStart) {
+            sampleRecords = [this.sampleRecords[this.sampleStart].slice(0,2).concat([this.getMedian(), this.getHPDlower(), this.getHPDupper()])];
+            sampleRecords = sampleRecords.concat(this.sampleRecords.slice(this.sampleStart+1, this.sampleRecords.length-1));
+            sampleRecords.push(this.sampleRecords[this.sampleRecords.length-2].slice(0,2).concat(
+                        [this.getMedian(), this.getHPDlower(), this.getHPDupper()]));
         }
-
         return sampleRecords;
+
     }},
 
     /**
