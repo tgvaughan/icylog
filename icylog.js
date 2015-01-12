@@ -332,14 +332,17 @@ function updateVariableCheckboxes() {
 function updateTrace() {
 
     // Remove stale traces
+    var newTraceElements = {};
     for (var i=0; i<Object.keys(traceElements).length; i++) {
         var key = Object.keys(traceElements)[i];
         if (log.variableNames.indexOf(key)<0 || !variableElements[key][0].is(":checked")) {
             traceElements[key][0].remove();
             traceElements[key][1].destroy();
-            delete traceElements[key];
+        } else {
+            newTraceElements[key] = traceElements[key];
         }
     }
+    traceElements = newTraceElements;
 
     // Assemble required <div> elements
     for (var i=0; i<log.variableNames.length; i++) {
@@ -405,14 +408,17 @@ function updateTrace() {
 function updateHist() {
 
     // Remove stale histograms
+    var newHistElements = {};
     for (var i=0; i<Object.keys(histElements).length; i++) {
         var key = Object.keys(histElements)[i];
         if (log.variableNames.indexOf(key)<0 || !variableElements[key][0].is(":checked")) {
             histElements[key][0].remove();
             histElements[key][1].destroy();
-            delete histElements[key];
+        } else {
+            newHistElements[key] = histElements[key];
         }
     }
+    histElements = newHistElements;
 
     // Assemble required <div> elements
     for (var i=0; i<log.variableNames.length; i++) {
