@@ -223,8 +223,12 @@ var VariableLog = Object.create({}, {
             var n = this.samples.length - this.sampleStart;
             
             this.mean = 0.0;
-            for (var i=0; i<n; i++) {
-                this.mean += this.samples[i+this.sampleStart];
+            for (var i=this.sampleStart; i<this.samples.length; i++) {
+                thisVal = this.samples[i];
+                if (!isNaN(thisVal))
+                    this.mean += thisVal;
+                else
+                    n -= 1;
             }
             this.mean /= n;
         }
@@ -237,8 +241,12 @@ var VariableLog = Object.create({}, {
             var n = this.samples.length - this.sampleStart;
             
             this.variance = 0.0;
-            for (var i=0; i<n; i++) {
-                this.variance += this.samples[i+this.sampleStart]*this.samples[i+this.sampleStart];
+            for (var i=this.sampleStart; i<this.samples.length; i++) {
+                thisVal = this.samples[i];
+                if (!isNaN(thisVal))
+                    this.variance += thisVal*thisVal;
+                else
+                    n -= 1;
             }
             this.variance /= n;
             this.variance -= this.getMean()*this.getMean();
@@ -261,7 +269,7 @@ var VariableLog = Object.create({}, {
 
     getHPDandMedian: {value: function() {
         if (this.HPDandMedian == undefined) {
-            var sorted = this.samples.slice(this.sampleStart).sort(
+            var sorted = this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x) }).sort(
                 function(a,b) {return a-b;});
 
             var n = sorted.length;
@@ -277,8 +285,8 @@ var VariableLog = Object.create({}, {
 
     getRange: {value: function() {
         if (this.range == undefined) {
-            this.range = [Math.min.apply(null, this.samples.slice(this.sampleStart)),
-                          Math.max.apply(null, this.samples.slice(this.sampleStart))];
+            this.range = [Math.min.apply(null, this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x)})),
+                          Math.max.apply(null, this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x)}))];
         }
 
         return this.range;
@@ -325,6 +333,9 @@ var VariableLog = Object.create({}, {
                 this.histogram[i] = [range[0]+this.binwidth*(i+0.5), 0];
 
             for (var i=this.sampleStart; i<this.samples.length; i++) {
+                if (isNaN(this.samples[i]))
+                    continue;
+
                 var thisBin = Math.floor((this.samples[i]-range[0])/this.binwidth);
 
                 if (thisBin==nBins && this.samples[i]==range[1])
