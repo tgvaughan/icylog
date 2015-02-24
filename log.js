@@ -284,9 +284,31 @@ var VariableLog = Object.create({}, {
     }},
 
     getRange: {value: function() {
+
+        function arrayMin(a) {
+            min = Infinity;
+            for (var i=0; i<a.length; i++) {
+                if (a[i]<min)
+                    min = a[i]
+            }
+
+            return min;
+        }
+
+        function arrayMax(a) {
+            max = -Infinity;
+            for (var i=0; i<a.length; i++) {
+                if (a[i]>max)
+                    max = a[i]
+            }
+
+            return max;
+        }
+
+
         if (this.range == undefined) {
-            this.range = [Math.min.apply(null, this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x)})),
-                          Math.max.apply(null, this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x)}))];
+            this.range = [arrayMin(this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x)})),
+                          arrayMax(this.samples.slice(this.sampleStart).filter(function(x) { return !isNaN(x)}))];
         }
 
         return this.range;
