@@ -103,8 +103,14 @@ $(document).ready(function() {
     });
 
     // Make left panel resizable
-    $("#leftPanel").resizable();
-
+    $("#leftPanel").resizable({
+        handles: "e",
+        minWidth: 190,
+        resize: function(event, ui) {
+            $("#dropPanel").css("left", ui.size.width + 10 + "px");
+            $("#mainPanel").css("left", ui.size.width + 10 + "px");
+        }
+    });
 
     // Dialog boxes
 
