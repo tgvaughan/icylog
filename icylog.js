@@ -102,6 +102,15 @@ $(document).ready(function() {
         }
     });
 
+    // Make left panel resizable
+    $("#leftPanel").resizable({
+        handles: "e",
+        minWidth: 190,
+        resize: function(event, ui) {
+            $("#dropPanel").css("left", ui.size.width + 10 + "px");
+            $("#mainPanel").css("left", ui.size.width + 10 + "px");
+        }
+    });
 
     // Dialog boxes
 
@@ -246,7 +255,7 @@ function updateDropPanel() {
     // Update padding on drop panel:
     var dropPanel = $("#dropPanel");
     dropPanel.html("");
-    
+
     var imgHeight = 136;
     var imgWidth = 368;
 
@@ -388,7 +397,7 @@ function updateTrace() {
                                "Median": {strokeWidth: 2},
                                "lower 95% HPD": {strokeWidth: 2, strokePattern: [10,5]},
                                "upper 95% HPD": {strokeWidth: 2, strokePattern: [10,5]}}};
-            
+
             traceElements[key][1] = new Dygraph(traceElements[key][0].get(0),
                         log.variableLogs[variableIndex].getSampleRecords(),
                         options);
@@ -400,7 +409,7 @@ function updateTrace() {
                 valueRange: log.variableLogs[variableIndex].getRange()
             });
         }
-        
+
     }
 }
 
@@ -524,12 +533,12 @@ function updateHist() {
                            pointSize: 4,
                            dateWindow: histogramWindow,
                            plotter: plotterCallback};
-            
+
             histElements[key][1] = new Dygraph(histElements[key][0].get(0),
                                                histogramData,
                                                options);
         } else {
-            
+
             // Update existing plot
 
             histElements[key][1].resize();
@@ -539,7 +548,7 @@ function updateHist() {
                 plotter: plotterCallback
             });
         }
-        
+
     }
 }
 
