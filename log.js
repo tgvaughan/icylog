@@ -273,9 +273,9 @@ var VariableLog = Object.create({}, {
                 function(a,b) {return a-b;});
 
             var n = sorted.length;
-            var lower = sorted[Math.round(0.025*n)];
-            var upper = sorted[Math.round(0.975*n)];
-            var median = sorted[Math.round(0.5*n)];
+            var lower = sorted[Math.floor(0.025*n)];
+            var upper = sorted[Math.floor(0.975*n)];
+            var median = sorted[Math.floor(0.5*n)];
 
             this.HPDandMedian = [lower, upper, median];
         }
