@@ -42,10 +42,16 @@ var Log = Object.create({}, {
         var lines = logFileString.split('\n');
 
         var headerRead = false;
+
+        // Assume first column contains sample numbers
+        // (True for BEAST and MrBayes.)
         var sampleIdxCol = 0;
 
         for (var i=0; i<lines.length; i++) {
             var thisLine = lines[i].trim();
+
+            // Strip NEXUS-style comments (MrBayes)
+            thisLine = thisLine.replace(/\[[^]*\]/, "");
 
             // Skip newlines and comments
             if (thisLine.length == 0 || thisLine[0] == "#")
@@ -57,12 +63,7 @@ var Log = Object.create({}, {
 
                 // Read header
 
-                for (var fidx=0; fidx<fields.length; fidx++) {
-                    if (fields[fidx].toLowerCase() === "sample") {
-                        sampleIdxCol = fidx;
-                        continue;
-                    }
-
+                for (var fidx=1; fidx<fields.length; fidx++) {
                     var varLog = Object.create(VariableLog, {}).init(fields[fidx]);
                     this.variableLogs.push(varLog);
                     this.variableNames.push(fields[fidx]);
