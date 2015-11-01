@@ -97,7 +97,6 @@ $(document).ready(function() {
     });
     $("#burninFrac").on("selectmenuchange", function() {
         if (log != undefined) {
-            log.setBurninFrac($("#burninFrac").val());
             update();
         }
     });
@@ -188,7 +187,6 @@ function reloadLogData() {
         return;
 
     log = Object.create(Log, {}).init(logFileData, "\t");
-    log.setBurninFrac($("#burninFrac").val());
     updateLoadingButtons();
     update();
 }
@@ -574,6 +572,8 @@ function update() {
         $("#mainPanel").addClass("ui-helper-hidden");
         $("#dropPanel").removeClass("ui-helper-hidden");
     } else {
+
+        log.setBurninFrac($("#burninFrac").val());
         $("#mainPanel").removeClass("ui-helper-hidden");
         $("#dropPanel").addClass("ui-helper-hidden");
         updateVariableCheckboxes();
