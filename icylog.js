@@ -183,8 +183,12 @@ function loadFile() {
 
 // Read log file data into Log object.
 function reloadLogData() {
-    if (logFileData === undefined)
+    if (logFileData === undefined) {
+        document.title = "IcyLog";
         return;
+    }
+
+    document.title = "IcyLog: " + logFile.name;
 
     log = Object.create(Log, {}).init(logFileData, "\t");
     updateLoadingButtons();
