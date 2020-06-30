@@ -12,3 +12,10 @@ The latest version is hosted at
 This software is free (as in freedom). It is made available under the
 terms of the GNU General Public Licence version 3, which is contained
 in this directory in the file named COPYING.
+
+Update
+------
+
+Sadly the polling features provided by IcyLog no longer work with current
+browsers, as the javascript feature this relies on has been removed for
+security reasons.
